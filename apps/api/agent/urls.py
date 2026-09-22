@@ -1,7 +1,12 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views import AgentCategoryViewSet, AgentProductViewSet, ConfirmActionView
+from .views import (
+    AgentCategoryViewSet,
+    AgentProductViewSet,
+    ConfirmActionView,
+    SyncProductView,
+)
 
 app_name = "agent"
 
@@ -15,5 +20,6 @@ urlpatterns = [
         ConfirmActionView.as_view(),
         name="confirm-action",
     ),
+    path("sync/product/", SyncProductView.as_view(), name="sync-product"),
     path("", include(router.urls)),
 ]
