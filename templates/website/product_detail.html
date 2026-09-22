@@ -16,9 +16,14 @@
         <img src="{{ image.image.url }}" alt="{{ image.alt_text|default:product.name }}" loading="{% if forloop.first %}eager{% else %}lazy{% endif %}"
              class="w-full rounded-2xl border border-slate-800 object-cover bg-slate-900">
         {% empty %}
+        {% if product.image_url %}
+        <img src="{{ product.image_url }}" alt="{{ product.name }}"
+             class="w-full rounded-2xl border border-slate-800 object-cover bg-slate-900" loading="eager">
+        {% else %}
         <div class="w-full h-80 rounded-2xl border border-slate-800 bg-slate-900 flex items-center justify-center text-slate-600" aria-hidden="true">
           <i class="fa-solid fa-shirt text-6xl"></i>
         </div>
+        {% endif %}
         {% endfor %}
       </section>
 
