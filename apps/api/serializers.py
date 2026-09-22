@@ -42,6 +42,7 @@ class ProductListSerializer(serializers.ModelSerializer):
             "slug",
             "price",
             "stock",
+            "line",
             "category",
             "primary_image",
         ]
@@ -70,6 +71,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             "description",
             "price",
             "wholesale_price",
+            "line",
             "stock",
             "category",
             "images",

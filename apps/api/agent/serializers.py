@@ -28,6 +28,7 @@ class ProductAgentSerializer(serializers.ModelSerializer):
             "price",
             "wholesale_price",
             "stock",
+            "line",
             "category",
             "is_published",
             "is_active",
