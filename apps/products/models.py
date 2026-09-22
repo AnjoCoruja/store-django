@@ -101,6 +101,36 @@ class Product(TimeStampedModel):
         blank=True,
         validators=[MinValueValidator(Decimal("0.00"))],
     )
+    # Campos de sincronizacao via Google Drive (Red Blue Line)
+    color = models.CharField(max_length=60, blank=True, default="", verbose_name="Cor")
+    size_range = models.CharField(
+        max_length=60, blank=True, default="", verbose_name="Tamanhos"
+    )
+    wholesale_price_6 = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(Decimal("0.00"))],
+        verbose_name="Atacado 6+ peças",
+    )
+    wholesale_price_24 = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(Decimal("0.00"))],
+        verbose_name="Caixa 24+ peças",
+    )
+    drive_file_id = models.CharField(
+        max_length=128,
+        unique=True,
+        null=True,
+        blank=True,
+        db_index=True,
+        verbose_name="ID do arquivo no Google Drive",
+    )
+    image_url = models.URLField(blank=True, default="", verbose_name="URL da imagem (Drive)")
     stock = models.PositiveIntegerField(default=0)
     category = models.ForeignKey(
         Category,
