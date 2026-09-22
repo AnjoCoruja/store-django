@@ -325,3 +325,55 @@ class TestAgentProductLine:
         )
         assert response.status_code == 201
         assert Product.objects.get(name="Legging").line == "verao"
+
+
+# ---------- FASE 14: sync from Google Drive ----------
+
+
+@pytest.mark.django_db
+class TestSyncProduct:
+    URL = "/api/v1/agent/sync/product/"
+
+    def test_sync_creates_product_and_category(self, agent_client):
+        payload = {
+            "drive_file_id": "drive123",
+            "nome": "Camiseta UV - Azul - P ao G - 49.90",
+            "categoria": "Camisetas UV",
+            "cor": "Azul",
+            "tamanho": "P ao G",
+            "preco_unitario": "49.90",
+            "preco_atacado_6": "44.90",
+            "preco_caixa_24": "42.90",
+            "url_imagem": "https://drive.google.com/file/d/drive123/view",
+        }
+        response = agent_client.post(self.URL, data=payload, format="json")
+        assert response.status_code == 201
+        product = Product.objects.get(drive_file_id="drive123")
+        assert product.category.name == "Camisetas UV"
+        assert product.color == "Azul"
+        assert product.is_published is True
+
+    def test_sync_updates_existing_product(self, agent_client, category):
+        product = Product.objects.create(
+            name="Antigo", price="10.00", stock=1, category=category,
+            drive_file_id="drive999",
+        )
+        payload = {
+            "drive_file_id": "drive999",
+            "nome": "Novo Nome",
+            "categoria": category.name,
+            "preco_unitario": "59.90",
+        }
+        response = agent_client.post(self.URL, data=payload, format="json")
+        assert response.status_code == 200
+        product.refresh_from_db()
+        assert product.name == "Novo Nome"
+        assert product.price == Decimal("59.90")
+
+    def test_sync_requires_drive_file_id(self, agent_client):
+        response = agent_client.post(self.URL, data={"nome": "X"}, format="json")
+        assert response.status_code == 400
+
+    def test_sync_requires_auth(self, client):
+        response = client.post(self.URL, data={"drive_file_id": "x"}, format="json")
+        assert response.status_code in (401, 403)
