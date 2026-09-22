@@ -236,3 +236,62 @@ class ConfirmActionView(APIView):
                 "applied": new_value,
             }
         )
+
+
+class SyncProductView(APIView):
+    """Sync a product from Google Drive (create or update by drive_file_id)."""
+
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAgentToken]
+    throttle_classes = [AgentRateThrottle]
+
+    def post(self, request):
+        data = request.data
+        drive_file_id = data.get("drive_file_id")
+        if not drive_file_id:
+            return Response(
+                {"drive_file_id": "Campo obrigatório."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        category_name = (data.get("categoria") or "Geral").strip()
+        category, _ = Category.objects.get_or_create(name=category_name)
+
+        name = (data.get("nome") or "Produto Red Blue Line").strip()
+        price = data.get("preco_unitario") or data.get("price") or "0.00"
+
+        defaults = {
+            "name": name,
+            "category": category,
+            "color": (data.get("cor") or "").strip(),
+            "size_range": (data.get("tamanho") or "").strip(),
+            "price": price,
+            "wholesale_price": data.get("preco_atacado_6"),
+            "wholesale_price_6": data.get("preco_atacado_6"),
+            "wholesale_price_24": data.get("preco_caixa_24"),
+            "image_url": data.get("url_imagem") or "",
+            "description": data.get("descricao") or "",
+            "is_published": True,
+            "is_active": True,
+        }
+
+        product, created = Product.objects.update_or_create(
+            drive_file_id=drive_file_id,
+            defaults=defaults,
+        )
+        log_agent_action(
+            request,
+            action="create" if created else "update",
+            resource="product",
+            resource_id=product.pk,
+            new_value={"drive_file_id": drive_file_id, "name": product.name},
+        )
+        return Response(
+            {
+                "status": "criado" if created else "atualizado",
+                "produto": product.name,
+                "slug": product.slug,
+                "categoria": category.name,
+            },
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+        )
