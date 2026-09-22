@@ -10,46 +10,92 @@
   <meta property="og:description" content="{{ meta_description|default:'Moda para atacado e varejo no Brás — Red Blue Line.' }}">
   <meta property="og:type" content="website">
   <meta property="og:url" content="{{ request.build_absolute_uri }}">
-  {% load static %}
-  <link rel="stylesheet" href="{% static 'css/site.css' %}">
+  <!-- Tailwind CSS + FontAwesome -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
-  <header class="site-header">
-    <div class="container header-inner">
-      <a class="brand" href="{% url 'website:home' %}">Red Blue Line</a>
-      <nav aria-label="Navegação principal">
-        <ul class="nav-list">
-          <li><a href="{% url 'website:home' %}">Início</a></li>
-          <li><a href="{% url 'website:product_list' %}">Produtos</a></li>
-          <li><a href="{% url 'website:about' %}">Sobre Nós</a></li>
+<body class="bg-slate-950 text-gray-100 font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <a href="{% url 'website:home' %}" class="text-lg font-black tracking-wider whitespace-nowrap">
+        <span class="text-red-500">RED</span> <span class="text-white">BLUE</span> <span class="text-blue-500">LINE</span>
+      </a>
+      <nav aria-label="Navegação principal" class="hidden sm:block">
+        <ul class="flex space-x-6 text-sm font-semibold">
+          <li><a href="{% url 'website:home' %}" class="text-gray-300 hover:text-white transition">Início</a></li>
+          <li><a href="{% url 'website:product_list' %}" class="text-gray-300 hover:text-white transition">Produtos</a></li>
+          <li><a href="{% url 'website:about' %}" class="text-gray-300 hover:text-white transition">Sobre Nós</a></li>
         </ul>
       </nav>
-      <form class="search-form" action="{% url 'website:product_list' %}" method="get" role="search">
-        <label class="visually-hidden" for="search-input">Buscar produtos</label>
-        <input id="search-input" type="search" name="q" value="{{ query|default:'' }}" placeholder="Buscar produtos…">
-        <button type="submit">Buscar</button>
+      <form action="{% url 'website:product_list' %}" method="get" role="search" class="flex items-center gap-2">
+        <label class="sr-only" for="search-input">Buscar produtos</label>
+        <input id="search-input" type="search" name="q" value="{{ query|default:'' }}" placeholder="Buscar…"
+               class="bg-slate-800 border border-slate-700 text-sm text-white rounded-lg px-3 py-1.5 w-32 sm:w-48 focus:outline-none focus:border-blue-500">
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-3 py-1.5 rounded-lg transition">
+          <i class="fa-solid fa-magnifying-glass"></i>
+        </button>
       </form>
     </div>
   </header>
 
-  <main class="container" id="main-content">
+  <!-- Conteúdo -->
+  <main class="flex-grow w-full" id="main-content">
     {% block content %}{% endblock %}
   </main>
 
-  <footer class="site-footer">
-    <div class="container">
-      <p><strong>Red Blue Line</strong> — Moda para atacado e varejo há mais de 10 anos no Brás.</p>
-      <address style="font-style: normal;">
-        Rua Tiers, 355 — Shopping Tiers, Box 55 — Brás, São Paulo - SP<br>
-        Seg a Sex: 06h às 16h · Sáb: 06h às 13h
-      </address>
-      <p>
-        WhatsApp: <a href="https://wa.me/5511954294886">(11) 95429-4886</a> ·
-        E-mail: <a href="mailto:redlinevestuario@hotmail.com">redlinevestuario@hotmail.com</a> ·
-        Instagram: <a href="https://instagram.com/redlinevest" target="_blank" rel="noopener">@redlinevest</a>
-      </p>
-      <p>&copy; {% now "Y" %} Red Blue Line. Todos os direitos reservados.</p>
+  <!-- Rodapé sofisticado -->
+  <footer class="bg-slate-900 border-t border-slate-800 text-gray-400 text-sm mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid grid-cols-1 md:grid-cols-3 gap-8">
+
+      <!-- Coluna 1: Sobre a Marca -->
+      <div class="space-y-3">
+        <h4 class="text-white font-bold tracking-wider text-base uppercase">
+          <span class="text-red-500">RED</span> BLUE <span class="text-blue-500">LINE</span>
+        </h4>
+        <p class="text-xs text-gray-400 leading-relaxed">
+          Moda para atacado e varejo há mais de 10 anos no Brás. Qualidade, variedade e compromisso com o seu estilo o ano inteiro.
+        </p>
+      </div>
+
+      <!-- Coluna 2: Endereço e Horário -->
+      <div class="space-y-3">
+        <h4 class="text-white font-bold tracking-wider text-base uppercase">Localização & Horário</h4>
+        <p class="text-xs text-gray-400 flex items-start gap-2">
+          <i class="fa-solid fa-location-dot text-blue-500 mt-0.5"></i>
+          <span>Rua Tiers, 355 — Shopping Tiers, Box 55 — Brás, São Paulo - SP</span>
+        </p>
+        <p class="text-xs text-gray-400 flex items-center gap-2">
+          <i class="fa-regular fa-clock text-blue-500"></i>
+          <span>Seg a Sex: 06h às 16h · Sáb: 06h às 13h</span>
+        </p>
+      </div>
+
+      <!-- Coluna 3: Contato e Redes -->
+      <div class="space-y-3">
+        <h4 class="text-white font-bold tracking-wider text-base uppercase">Atendimento</h4>
+        <p class="text-xs text-gray-400 flex items-center gap-2">
+          <i class="fa-brands fa-whatsapp text-emerald-500"></i>
+          <a href="https://wa.me/5511954294886" target="_blank" class="hover:text-white transition">WhatsApp: (11) 95429-4886</a>
+        </p>
+        <p class="text-xs text-gray-400 flex items-center gap-2">
+          <i class="fa-regular fa-envelope text-blue-400"></i>
+          <a href="mailto:redlinevestuario@hotmail.com" class="hover:text-white transition">redlinevestuario@hotmail.com</a>
+        </p>
+        <p class="text-xs text-gray-400 flex items-center gap-2">
+          <i class="fa-brands fa-instagram text-pink-500"></i>
+          <a href="https://instagram.com/redlinevest" target="_blank" rel="noopener" class="hover:text-white transition">@redlinevest</a>
+        </p>
+      </div>
+
+    </div>
+
+    <!-- Linha Inferior -->
+    <div class="bg-slate-950 py-4 border-t border-slate-800/60 text-center text-xs text-gray-500">
+      &copy; {% now "Y" %} Red Blue Line. Todos os direitos reservados.
     </div>
   </footer>
+
 </body>
 </html>
