@@ -75,7 +75,18 @@ class Category(TimeStampedModel):
 
 
 class Product(TimeStampedModel):
+    class Line(models.TextChoices):
+        VERAO = "verao", "Verão / Calor (Red Line)"
+        INVERNO = "inverno", "Inverno / Frio (Blue Line)"
+
     name = models.CharField(max_length=200)
+    line = models.CharField(
+        max_length=10,
+        choices=Line.choices,
+        default=Line.VERAO,
+        db_index=True,
+        verbose_name="Linha",
+    )
     slug = models.SlugField(max_length=220, unique=True, db_index=True)
     description = models.TextField(blank=True, default="")
     price = models.DecimalField(
