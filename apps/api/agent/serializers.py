@@ -8,7 +8,13 @@ from decimal import Decimal
 
 from rest_framework import serializers
 
-from apps.products.models import Product
+from apps.products.models import (
+    ALLOWED_IMAGE_EXTENSIONS,
+    Category,
+    Product,
+    ProductImage,
+    validate_image_size,
+)
 
 
 class ProductAgentSerializer(serializers.ModelSerializer):
@@ -32,3 +38,29 @@ class ProductAgentSerializer(serializers.ModelSerializer):
         if value < Decimal("0.00"):
             raise serializers.ValidationError("Preço não pode ser negativo.")
         return value
+
+
+class ProductImageAgentSerializer(serializers.ModelSerializer):
+    """Upload of product images by the agent (multipart)."""
+
+    class Meta:
+        model = ProductImage
+        fields = ["id", "image", "alt_text", "is_primary", "sort_order"]
+
+    def validate_image(self, value):
+        ext = value.name.rsplit(".", 1)[-1].lower() if "." in value.name else ""
+        if ext not in ALLOWED_IMAGE_EXTENSIONS:
+            raise serializers.ValidationError(
+                f"Extensão não permitida: .{ext}. Use: {', '.join(ALLOWED_IMAGE_EXTENSIONS)}."
+            )
+        validate_image_size(value)
+        return value
+
+
+class CategoryAgentSerializer(serializers.ModelSerializer):
+    """Write serializer for agent-managed categories (slug auto-generated)."""
+
+    class Meta:
+        model = Category
+        fields = ["id", "name", "slug", "description", "is_active", "sort_order"]
+        read_only_fields = ["id", "slug"]

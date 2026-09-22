@@ -4,6 +4,7 @@ from decimal import Decimal
 import pytest
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from rest_framework.authtoken.models import Token
 
@@ -192,3 +193,114 @@ class TestAgentThrottling:
         codes = [agent_client.get(url).status_code for _ in range(4)]
         assert codes[:3] == [200, 200, 200]
         assert codes[3] == 429
+
+
+# ---------- FASE 11: product image upload ----------
+
+
+def _png_bytes():
+    # 1x1 transparent PNG (67 bytes, well under 5MB)
+    import base64
+
+    return base64.b64decode(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+    )
+
+
+@pytest.mark.django_db
+class TestProductImageUpload:
+    def _product(self, category):
+        return Product.objects.create(
+            name="Produto Foto", price="10.00", stock=1, category=category
+        )
+
+    def test_upload_image_creates_primary(self, agent_client, category):
+        product = self._product(category)
+        img = SimpleUploadedFile("foto.png", _png_bytes(), content_type="image/png")
+        response = agent_client.post(
+            f"/api/v1/agent/products/{product.slug}/images/",
+            {"image": img, "is_primary": True, "alt_text": "Foto principal"},
+            format="multipart",
+        )
+        assert response.status_code == 201
+        assert product.images.count() == 1
+        image = product.images.get()
+        assert image.is_primary is True
+        assert image.alt_text == "Foto principal"
+        assert AuditLog.objects.filter(action="upload_image").exists()
+
+    def test_second_primary_replaces_first(self, agent_client, category):
+        product = self._product(category)
+        for i in range(2):
+            img = SimpleUploadedFile(f"foto{i}.png", _png_bytes(), content_type="image/png")
+            agent_client.post(
+                f"/api/v1/agent/products/{product.slug}/images/",
+                {"image": img, "is_primary": True},
+                format="multipart",
+            )
+        assert product.images.filter(is_primary=True).count() == 1
+
+    def test_invalid_extension_rejected(self, agent_client, category):
+        product = self._product(category)
+        bad = SimpleUploadedFile("virus.exe", b"MZ", content_type="application/octet-stream")
+        response = agent_client.post(
+            f"/api/v1/agent/products/{product.slug}/images/",
+            {"image": bad},
+            format="multipart",
+        )
+        assert response.status_code == 400
+        assert product.images.count() == 0
+
+    def test_upload_requires_auth(self, client, category):
+        product = self._product(category)
+        img = SimpleUploadedFile("foto.png", _png_bytes(), content_type="image/png")
+        response = client.post(
+            f"/api/v1/agent/products/{product.slug}/images/",
+            {"image": img},
+            format="multipart",
+        )
+        assert response.status_code in (401, 403)
+
+
+# ---------- FASE 12: agent categories ----------
+
+
+@pytest.mark.django_db
+class TestAgentCategories:
+    def test_create_category(self, agent_client):
+        response = agent_client.post(
+            "/api/v1/agent/categories/",
+            {"name": "Camisetas", "description": "Camisetas em geral"},
+            format="json",
+        )
+        assert response.status_code == 201
+        assert response.json()["slug"] == "camisetas"
+        assert AuditLog.objects.filter(action="create", resource="category").exists()
+
+    def test_list_categories(self, agent_client, category):
+        response = agent_client.get("/api/v1/agent/categories/")
+        assert response.status_code == 200
+        names = [c["name"] for c in response.json()["results"]]
+        assert category.name in names
+
+    def test_update_category(self, agent_client, category):
+        response = agent_client.patch(
+            f"/api/v1/agent/categories/{category.slug}/",
+            data='{"description": "Nova descricao"}',
+            content_type="application/json",
+        )
+        assert response.status_code == 200
+        category.refresh_from_db()
+        assert category.description == "Nova descricao"
+
+    def test_delete_is_soft_deactivate(self, agent_client, category):
+        response = agent_client.delete(f"/api/v1/agent/categories/{category.slug}/")
+        assert response.status_code == 204
+        category.refresh_from_db()
+        assert category.is_active is False
+
+    def test_create_requires_auth(self, client):
+        response = client.post(
+            "/api/v1/agent/categories/", {"name": "Sem Auth"}, format="json"
+        )
+        assert response.status_code in (401, 403)
