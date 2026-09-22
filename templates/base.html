@@ -21,6 +21,7 @@
         <ul class="nav-list">
           <li><a href="{% url 'website:home' %}">Início</a></li>
           <li><a href="{% url 'website:product_list' %}">Produtos</a></li>
+          <li><a href="{% url 'website:about' %}">Sobre Nós</a></li>
         </ul>
       </nav>
       <form class="search-form" action="{% url 'website:product_list' %}" method="get" role="search">
@@ -37,7 +38,12 @@
 
   <footer class="site-footer">
     <div class="container">
-      <p>&copy; {% now "Y" %} Loja. Todos os direitos reservados.</p>
+      <p><strong>Red Blue Line</strong> — Moda para atacado e varejo há mais de 10 anos no Brás.</p>
+      <address style="font-style: normal;">
+        Rua Tiers, 355 — Shopping Tiers, Box 55 — Brás, São Paulo - SP<br>
+        Seg a Sex: 06h às 16h · Sáb: 06h às 13h
+      </address>
+      <p>&copy; {% now "Y" %} Red Blue Line. Todos os direitos reservados.</p>
     </div>
   </footer>
 </body>

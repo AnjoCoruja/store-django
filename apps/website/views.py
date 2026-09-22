@@ -4,6 +4,17 @@ from django.shortcuts import get_object_or_404, render
 from apps.products.models import Category, Product
 
 
+def about(request):
+    return render(
+        request,
+        "website/about.html",
+        {
+            "meta_title": "Sobre Nós | Red Blue Line",
+            "meta_description": "Conheça a Red Blue Line: mais de 10 anos de moda no Brás, atacado e varejo. Rua Tiers, 355, Shopping Tiers, Box 55.",
+        },
+    )
+
+
 def home(request):
     featured = (
         Product.objects.filter(is_active=True, is_published=True)
