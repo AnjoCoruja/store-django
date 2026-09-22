@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}{{ meta_title|default:"Loja" }}{% endblock %}</title>
-  <meta name="description" content="{{ meta_description|default:'Catálogo de produtos.' }}">
+  <title>{% block title %}{{ meta_title|default:"Red Blue Line" }}{% endblock %}</title>
+  <meta name="description" content="{{ meta_description|default:'Moda para atacado e varejo no Brás — Red Blue Line.' }}">
   <link rel="canonical" href="{{ request.build_absolute_uri }}">
-  <meta property="og:title" content="{{ meta_title|default:'Loja' }}">
-  <meta property="og:description" content="{{ meta_description|default:'Catálogo de produtos.' }}">
+  <meta property="og:title" content="{{ meta_title|default:'Red Blue Line' }}">
+  <meta property="og:description" content="{{ meta_description|default:'Moda para atacado e varejo no Brás — Red Blue Line.' }}">
   <meta property="og:type" content="website">
   <meta property="og:url" content="{{ request.build_absolute_uri }}">
   {% load static %}
@@ -16,7 +16,7 @@
 <body>
   <header class="site-header">
     <div class="container header-inner">
-      <a class="brand" href="{% url 'website:home' %}">Loja</a>
+      <a class="brand" href="{% url 'website:home' %}">Red Blue Line</a>
       <nav aria-label="Navegação principal">
         <ul class="nav-list">
           <li><a href="{% url 'website:home' %}">Início</a></li>
@@ -43,6 +43,11 @@
         Rua Tiers, 355 — Shopping Tiers, Box 55 — Brás, São Paulo - SP<br>
         Seg a Sex: 06h às 16h · Sáb: 06h às 13h
       </address>
+      <p>
+        WhatsApp: <a href="https://wa.me/5511954294886">(11) 95429-4886</a> ·
+        E-mail: <a href="mailto:redlinevestuario@hotmail.com">redlinevestuario@hotmail.com</a> ·
+        Instagram: <a href="https://instagram.com/redlinevest" target="_blank" rel="noopener">@redlinevest</a>
+      </p>
       <p>&copy; {% now "Y" %} Red Blue Line. Todos os direitos reservados.</p>
     </div>
   </footer>
