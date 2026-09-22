@@ -5,6 +5,9 @@ Security model (see docs/ARCHITECTURE.md):
 - Per-token rate limiting (scope 'agent').
 - Every mutation is written to the append-only AuditLog (never secrets).
 """
+import time
+
+from django.db import OperationalError
 from rest_framework import status, viewsets
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import action
@@ -158,6 +161,16 @@ class AgentCategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategoryAgentSerializer
 
+    def create(self, request, *args, **kwargs):
+        """Idempotent: return the existing category when the name already exists."""
+        name = (request.data.get("name") or "").strip()
+        existing = Category.objects.filter(name__iexact=name).first()
+        if existing is not None:
+            return Response(
+                CategoryAgentSerializer(existing).data, status=status.HTTP_200_OK
+            )
+        return super().create(request, *args, **kwargs)
+
     def perform_create(self, serializer):
         category = serializer.save()
         log_agent_action(
@@ -275,10 +288,20 @@ class SyncProductView(APIView):
             "is_active": True,
         }
 
-        product, created = Product.objects.update_or_create(
-            drive_file_id=drive_file_id,
-            defaults=defaults,
-        )
+        # SQLite aceita um unico escritor por vez; requisicoes simultaneas
+        # podem colidir e gerar "database is locked". Tenta com backoff.
+        product = created = None
+        for attempt in range(5):
+            try:
+                product, created = Product.objects.update_or_create(
+                    drive_file_id=drive_file_id,
+                    defaults=defaults,
+                )
+                break
+            except OperationalError as exc:
+                if "locked" not in str(exc).lower() or attempt == 4:
+                    raise
+                time.sleep(0.2 * (attempt + 1))
         log_agent_action(
             request,
             action="create" if created else "update",
