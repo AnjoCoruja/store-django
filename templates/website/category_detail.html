@@ -1,7 +1,50 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>{{ category.name }}</h1>
-{% if category.description %}<p>{{ category.description }}</p>{% endif %}
-{% include "website/_product_grid.html" with products=products %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
+  <div class="border-b border-slate-800 pb-4">
+    <h1 class="text-3xl font-extrabold text-white">{{ category.name }}</h1>
+    {% if category.description %}<p class="text-gray-400 text-sm mt-2">{{ category.description }}</p>{% endif %}
+  </div>
+
+  {% if products %}
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    {% for product in products %}
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-md hover:border-slate-700 transition duration-200 flex flex-col justify-between">
+      <div class="h-48 bg-slate-800 relative overflow-hidden flex items-center justify-center">
+        {% with img=product.images.all.0 %}
+        {% if img %}
+        <img src="{{ img.image.url }}" alt="{{ img.alt_text|default:product.name }}" class="w-full h-full object-cover" loading="lazy">
+        {% else %}
+        <i class="fa-solid fa-shirt text-slate-700 text-5xl"></i>
+        {% endif %}
+        {% endwith %}
+        <span class="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-bold rounded-full uppercase {% if product.line == 'verao' %}bg-red-600{% else %}bg-blue-600{% endif %} text-white">
+          {% if product.line == 'verao' %}Verão{% else %}Inverno{% endif %}
+        </span>
+      </div>
+      <div class="p-5 space-y-2 flex-grow flex flex-col justify-between">
+        <div>
+          <h3 class="font-bold text-white text-base truncate">{{ product.name }}</h3>
+          <p class="text-xs text-gray-400 line-clamp-2 mt-1">{{ product.description|truncatewords:15 }}</p>
+        </div>
+        <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between">
+          <span class="text-blue-400 font-extrabold text-lg">R$ {{ product.price }}</span>
+          <a href="{% url 'website:product_detail' product.slug %}" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-medium px-3 py-2 rounded-lg transition">
+            Ver Detalhes
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="bg-slate-900/50 border border-slate-800/80 rounded-2xl p-12 text-center space-y-3">
+    <div class="w-12 h-12 bg-slate-800 text-slate-500 rounded-full flex items-center justify-center mx-auto text-lg">
+      <i class="fa-solid fa-box-open"></i>
+    </div>
+    <h3 class="text-lg font-medium text-white">Nenhum produto nesta categoria ainda</h3>
+  </div>
+  {% endif %}
+</div>
 {% endblock %}
