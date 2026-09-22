@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Produtos</h1>
+{% if query %}
+<p>Resultados para: <strong>{{ query }}</strong></p>
+{% endif %}
+{% include "website/_product_grid.html" with products=products %}
+{% endblock %}

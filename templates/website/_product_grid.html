@@ -1,0 +1,24 @@
+{% if products %}
+<div class="product-grid">
+  {% for product in products %}
+  <article class="product-card">
+    <a href="{% url 'website:product_detail' product.slug %}">
+      {% with product.images.all as images %}
+        {% if images.0.image %}
+        <img src="{{ images.0.image.url }}" alt="{{ images.0.alt_text|default:product.name }}" loading="lazy" width="300" height="300">
+        {% else %}
+        <div class="product-card__placeholder" aria-hidden="true">Sem imagem</div>
+        {% endif %}
+      {% endwith %}
+      <h3>{{ product.name }}</h3>
+      <p class="price">R$ {{ product.price }}</p>
+      {% if product.stock == 0 %}
+      <p class="out-of-stock">Fora de estoque</p>
+      {% endif %}
+    </a>
+  </article>
+  {% endfor %}
+</div>
+{% else %}
+<p class="empty-state">Nenhum produto encontrado.</p>
+{% endif %}

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero">
+  <h1>Bem-vindo à nossa loja</h1>
+  <p>Confira os produtos em destaque.</p>
+</section>
+
+{% if categories %}
+<section aria-labelledby="categories-heading">
+  <h2 id="categories-heading">Categorias</h2>
+  <ul class="category-grid">
+    {% for category in categories %}
+    <li>
+      <a class="category-card" href="{% url 'website:category_detail' category.slug %}">
+        {{ category.name }}
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+<section aria-labelledby="featured-heading">
+  <h2 id="featured-heading">Produtos em destaque</h2>
+  {% include "website/_product_grid.html" with products=featured_products %}
+</section>
+{% endblock %}

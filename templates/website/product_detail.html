@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+<article class="product-detail">
+  <nav class="breadcrumb" aria-label="Trilha de navegação">
+    <a href="{% url 'website:home' %}">Início</a> /
+    <a href="{% url 'website:product_list' %}">Produtos</a> /
+    <a href="{% url 'website:category_detail' product.category.slug %}">{{ product.category.name }}</a> /
+    <span aria-current="page">{{ product.name }}</span>
+  </nav>
+
+  <div class="product-detail__layout">
+    <section class="product-gallery" aria-label="Imagens do produto">
+      {% for image in product.images.all %}
+      <img src="{{ image.image.url }}" alt="{{ image.alt_text|default:product.name }}" loading="{% if forloop.first %}eager{% else %}lazy{% endif %}">
+      {% empty %}
+      <div class="product-card__placeholder" aria-hidden="true">Sem imagem</div>
+      {% endfor %}
+    </section>
+
+    <section class="product-info">
+      <h1>{{ product.name }}</h1>
+      <p class="price price--large">R$ {{ product.price }}</p>
+      {% if product.stock > 0 %}
+      <p class="in-stock">Em estoque ({{ product.stock }} un.)</p>
+      {% else %}
+      <p class="out-of-stock">Fora de estoque</p>
+      {% endif %}
+      <div class="product-description">
+        <h2>Descrição</h2>
+        <p>{{ product.description|linebreaksbr }}</p>
+      </div>
+    </section>
+  </div>
+</article>
+{% endblock %}

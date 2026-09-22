@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ meta_title|default:"Loja" }}{% endblock %}</title>
+  <meta name="description" content="{{ meta_description|default:'Catálogo de produtos.' }}">
+  <link rel="canonical" href="{{ request.build_absolute_uri }}">
+  <meta property="og:title" content="{{ meta_title|default:'Loja' }}">
+  <meta property="og:description" content="{{ meta_description|default:'Catálogo de produtos.' }}">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="{{ request.build_absolute_uri }}">
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/site.css' %}">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="{% url 'website:home' %}">Loja</a>
+      <nav aria-label="Navegação principal">
+        <ul class="nav-list">
+          <li><a href="{% url 'website:home' %}">Início</a></li>
+          <li><a href="{% url 'website:product_list' %}">Produtos</a></li>
+        </ul>
+      </nav>
+      <form class="search-form" action="{% url 'website:product_list' %}" method="get" role="search">
+        <label class="visually-hidden" for="search-input">Buscar produtos</label>
+        <input id="search-input" type="search" name="q" value="{{ query|default:'' }}" placeholder="Buscar produtos…">
+        <button type="submit">Buscar</button>
+      </form>
+    </div>
+  </header>
+
+  <main class="container" id="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>&copy; {% now "Y" %} Loja. Todos os direitos reservados.</p>
+    </div>
+  </footer>
+</body>
+</html>
