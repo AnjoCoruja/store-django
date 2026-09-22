@@ -39,7 +39,7 @@ class TestProductList:
 
     def test_search_no_results_shows_empty_state(self, client):
         response = client.get(reverse("website:product_list"), {"q": "xyzinexistente"})
-        assert "Nenhum produto encontrado.".encode() in response.content
+        assert "Nenhum produto disponível no momento.".encode() in response.content
 
 
 class TestProductDetail:
