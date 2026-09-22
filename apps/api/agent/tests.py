@@ -304,3 +304,24 @@ class TestAgentCategories:
             "/api/v1/agent/categories/", {"name": "Sem Auth"}, format="json"
         )
         assert response.status_code in (401, 403)
+
+
+# ---------- FASE 13: product line (verao/inverno) ----------
+
+
+@pytest.mark.django_db
+class TestAgentProductLine:
+    def test_agent_api_accepts_line(self, agent_client, category):
+        response = agent_client.post(
+            "/api/v1/agent/products/",
+            data={
+                "name": "Legging",
+                "price": "89.90",
+                "stock": 10,
+                "category": category.pk,
+                "line": "verao",
+            },
+            content_type="application/json",
+        )
+        assert response.status_code == 201
+        assert Product.objects.get(name="Legging").line == "verao"
