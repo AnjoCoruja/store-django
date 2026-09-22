@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block title %}Sobre Nós | Red Blue Line{% endblock %}
+
+{% block content %}
+<!-- Tailwind CSS via CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- FontAwesome para ícones -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<div class="bg-gray-50 text-gray-800 font-sans min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-5xl mx-auto bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+
+    <!-- Cabeçalho / Banner Principal -->
+    <div class="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white py-16 px-8 sm:px-16 text-center relative overflow-hidden">
+      <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]"></div>
+      <span class="inline-block bg-blue-600/30 border border-blue-400/30 text-blue-200 text-xs font-semibold px-4 py-1.5 rounded-full uppercase tracking-widest mb-4 backdrop-blur-sm">
+        Tradição e Confiança no Brás
+      </span>
+      <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight mb-4 leading-tight">
+        Mais de 10 Anos Vestindo Histórias
+      </h1>
+      <p class="text-lg sm:text-xl text-blue-100 max-w-2xl mx-auto font-light">
+        Moda de qualidade para atacado e varejo, acompanhando você em todas as estações do ano.
+      </p>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <div class="p-8 sm:p-14 space-y-12">
+
+      <!-- História e Endereço -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+        <div class="lg:col-span-2 space-y-6">
+          <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 border-l-4 border-blue-600 pl-4">
+            Nossa Trajetória
+          </h2>
+          <p class="text-gray-600 leading-relaxed text-base sm:text-lg">
+            Há mais de 10 anos, onde o ritmo acelerado de São Paulo encontra a paixão pela moda, nasceu a <strong class="text-gray-900">Red Blue Line</strong>. Localizada no mesmo endereço de sempre, nossa loja se consolidou como um ponto de referência tradicional para quem busca variedade, qualidade e preço justo.
+          </p>
+          <p class="text-gray-600 leading-relaxed text-base sm:text-lg">
+            Atendemos tanto o <span class="font-semibold text-blue-600">varejo</span> quanto o <span class="font-semibold text-indigo-600">atacado</span> com a mesma dedicação, construindo parcerias duradouras com lojistas de todo o Brasil e consumidores que buscam estilo no dia a dia.
+          </p>
+        </div>
+
+        <!-- Cartão de Localização -->
+        <div class="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 p-6 rounded-2xl shadow-sm space-y-4">
+          <div class="flex items-center space-x-3 text-blue-700">
+            <div class="p-3 bg-blue-600 text-white rounded-xl shadow-md">
+              <i class="fa-solid fa-location-dot text-xl"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-gray-900">Endereço Fixo</h3>
+              <p class="text-xs text-blue-600 font-medium">Venha nos fazer uma visita</p>
+            </div>
+          </div>
+          <p class="text-gray-700 text-sm leading-relaxed">
+            Rua Tiers, 355<br>
+            <strong class="text-gray-900">Shopping Tiers – Box 55</strong><br>
+            Brás, São Paulo - SP
+          </p>
+          <div class="pt-2 border-t border-blue-200/60 text-xs text-gray-500 flex items-center space-y-1 flex-col sm:flex-row sm:justify-between">
+            <span><i class="fa-regular fa-clock mr-1 text-blue-600"></i> Seg a Sex: 06h às 16h</span>
+            <span>Sáb: 06h às 13h</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Destaque de Coleções (Frio e Calor) -->
+      <div class="space-y-6 pt-4">
+        <div class="text-center max-w-xl mx-auto">
+          <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">A Moda que Acompanha o Seu Ano Inteiro</h2>
+          <p class="text-gray-500 text-sm mt-2">O clima muda, mas o nosso compromisso com o seu estilo permanece.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+          <!-- Card Calor -->
+          <div class="bg-gradient-to-br from-amber-50/50 to-orange-50/50 border border-amber-200/60 rounded-2xl p-6 sm:p-8 transition-transform duration-300 hover:-translate-y-1 shadow-sm">
+            <div class="w-12 h-12 bg-amber-500 text-white rounded-xl flex items-center justify-center text-xl mb-4 shadow-md">
+              <i class="fa-solid fa-sun"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">Para os Dias de Calor</h3>
+            <p class="text-gray-600 text-sm leading-relaxed mb-4">
+              Peças leves, frescas e cheias de movimento, como as nossas famosas <strong class="text-gray-800">camisetas com proteção UV</strong> e <strong class="text-gray-800">leggings</strong> de alta performance, desenvolvidas para treino, lazer e rotina.
+            </p>
+            <span class="inline-flex items-center text-xs font-semibold text-amber-700 bg-amber-100/80 px-3 py-1 rounded-full">
+              Conforto e Proteção
+            </span>
+          </div>
+
+          <!-- Card Frio -->
+          <div class="bg-gradient-to-br from-sky-50/50 to-blue-50/50 border border-sky-200/60 rounded-2xl p-6 sm:p-8 transition-transform duration-300 hover:-translate-y-1 shadow-sm">
+            <div class="w-12 h-12 bg-sky-600 text-white rounded-xl flex items-center justify-center text-xl mb-4 shadow-md">
+              <i class="fa-solid fa-snowflake"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">Para os Dias de Frio</h3>
+            <p class="text-gray-600 text-sm leading-relaxed mb-4">
+              Coleções aconchegantes, casacos e malhas que unem sofisticação e proteção térmica ideal, garantindo que você enfrente os dias mais frios com elegância e bem-estar.
+            </p>
+            <span class="inline-flex items-center text-xs font-semibold text-sky-700 bg-sky-100/80 px-3 py-1 rounded-full">
+              Aquecimento e Estilo
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Diferenciais: Atacado e Varejo -->
+      <div class="bg-gray-900 text-white rounded-2xl p-8 sm:p-10 shadow-lg relative overflow-hidden">
+        <div class="absolute right-0 bottom-0 opacity-5 transform translate-x-10 translate-y-10">
+          <i class="fa-solid fa-store text-9xl"></i>
+        </div>
+        <div class="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+          <div>
+            <h3 class="text-2xl font-bold mb-3">Do Varejo ao Atacado</h3>
+            <p class="text-gray-300 text-sm sm:text-base leading-relaxed">
+              Crescemos junto com você. Seja para renovar o seu guarda-roupa no varejo ou para abastecer o estoque da sua loja com margens competitivas e alto giro no atacado, estamos prontos para atender suas necessidades.
+            </p>
+          </div>
+          <div class="flex flex-col sm:flex-row gap-4 justify-end">
+            <a href="{% url 'website:product_list' %}" class="bg-blue-600 hover:bg-blue-700 text-white text-center font-medium px-6 py-3 rounded-xl transition duration-200 shadow-md">
+              Ver Catálogo
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Rodapé Interno da Página -->
+    <div class="bg-gray-100 py-6 px-8 text-center text-xs text-gray-500 border-t border-gray-200">
+      Red Blue Line &copy; 2026 — Todos os direitos reservados. Rua Tiers, 355, Shopping Tiers, Box 55, Brás, São Paulo - SP.
+    </div>
+
+  </div>
+</div>
+{% endblock %}
