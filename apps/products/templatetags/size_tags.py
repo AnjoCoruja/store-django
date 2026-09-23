@@ -20,17 +20,12 @@ def expand_sizes(size_range):
             break
     else:
         return [s]
-
-    # faixa numérica (04 ao 16)
     try:
-        start_n = int(start)
-        end_n = int(end)
+        start_n, end_n = int(start), int(end)
         if start_n <= end_n and (end_n - start_n) <= 30:
             return [f"{n:02d}" for n in range(start_n, end_n + 1, 2)]
     except (ValueError, TypeError):
         pass
-
-    # faixa de letras (P ao GG)
     def idx(x):
         try:
             return _ORDER.index(x.upper())
@@ -39,5 +34,4 @@ def expand_sizes(size_range):
     i, j = idx(start), idx(end)
     if i is not None and j is not None and i <= j:
         return _ORDER[i:j + 1]
-
     return [start, end] if start != end else [start]
