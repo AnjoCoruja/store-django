@@ -148,40 +148,21 @@
       el.innerText = q;
     }
 
-    // Tamanho selecionado por produto (nos cards)
-    function selectSize(productId, size, btn) {
-      document.querySelectorAll('#sizes-' + productId + ' .size-btn').forEach(b => {
-        b.classList.remove('bg-blue-600', 'text-white', 'border-blue-500');
-        b.classList.add('bg-slate-800', 'text-slate-300');
-      });
-      btn.classList.add('bg-blue-600', 'text-white', 'border-blue-500');
-      btn.classList.remove('bg-slate-800', 'text-slate-300');
-      document.getElementById('sizes-' + productId).dataset.selected = size;
-    }
-
     function addToCart(id, name, price, line, w6, w24) {
       const qtyEl = document.getElementById('qty-' + id);
       const qty = qtyEl ? (parseInt(qtyEl.innerText, 10) || 1) : 1;
-      const sizesEl = document.getElementById('sizes-' + id);
-      const size = sizesEl ? (sizesEl.dataset.selected || null) : null;
-      // exige tamanho quando o produto tem seletor
-      if (sizesEl && !size) {
-        alert('Escolha um tamanho antes de adicionar.');
-        return;
-      }
-      const key = size ? (id + '_' + size) : String(id);
+      const key = String(id);
       const p = parseFloat(price) || 0;
       if (cart[key]) { cart[key].qty += qty; }
-      else { cart[key] = { key, id, name, price: p, line, size, qty, w6: w6 ? parseFloat(w6) : null, w24: w24 ? parseFloat(w24) : null }; }
+      else { cart[key] = { key, id, name, price: p, line, qty, w6: w6 ? parseFloat(w6) : null, w24: w24 ? parseFloat(w24) : null }; }
       if (qtyEl) qtyEl.innerText = 1;
-      if (sizesEl) { delete sizesEl.dataset.selected; document.querySelectorAll('#sizes-' + id + ' .size-btn').forEach(b => { b.classList.remove('bg-blue-600', 'text-white', 'border-blue-500'); b.classList.add('bg-slate-800', 'text-slate-300'); }); }
       saveCart();
       updateCartUI();
       toggleCart();
     }
 
     // Desconto por faixa baseado no TOTAL de peças do carrinho
-    // (somando todos os modelos/tamanhos). 6+ peças = -R$5/peça; 24+ = -R$7/peça.
+    // (somando todos os modelos). 6+ peças = -R$5/peça; 24+ = -R$7/peça.
     function cartTotalQty() {
       return Object.values(cart).reduce((acc, i) => acc + i.qty, 0);
     }
@@ -193,6 +174,7 @@
       return null;
     }
 
+    // Preço unitário do item conforme a faixa do carrinho
     function unitPrice(item) {
       const tier = cartTier();
       const base = parseFloat(item.price) || 0;
@@ -220,7 +202,7 @@
       const totalElement = document.getElementById('cart-total');
       const items = Object.values(cart);
 
-      countBadge.innerText = cartTotalQty();
+      countBadge.innerText = items.reduce((acc, i) => acc + i.qty, 0);
 
       if (items.length === 0) {
         container.innerHTML = '<p class="text-slate-500 text-center mt-10">O carrinho está vazio.</p>';
@@ -236,7 +218,7 @@
         html += `
           <div class="flex justify-between items-center bg-slate-800 p-3 rounded-xl gap-2">
             <div class="flex-grow">
-              <h4 class="font-bold text-sm text-white">${item.name}${item.size ? ' <span class="text-blue-400 font-semibold">[' + item.size + ']</span>' : ''}</h4>
+              <h4 class="font-bold text-sm text-white">${item.name}</h4>
               <span class="text-xs text-emerald-400">R$ ${up.toFixed(2)} x ${item.qty}${tierLabel()} = <strong>R$ ${subtotal.toFixed(2)}</strong></span>
             </div>
             <div class="flex items-center gap-1">
@@ -277,7 +259,7 @@
         const up = unitPrice(item);
         const subtotal = up * item.qty;
         total += subtotal;
-        mensagem += `• ${item.qty}x ${item.name}${item.size ? ' [' + item.size + ']' : ''} — R$ ${up.toFixed(2)}${tierLabel()} (subtotal: R$ ${subtotal.toFixed(2)})\n`;
+        mensagem += `• ${item.qty}x ${item.name} — R$ ${up.toFixed(2)}${tierLabel()} (subtotal: R$ ${subtotal.toFixed(2)})\n`;
       });
       mensagem += `\n*TOTAL DO PEDIDO: R$ ${total.toFixed(2)}*`;
       window.open(`https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(mensagem)}`, '_blank');
