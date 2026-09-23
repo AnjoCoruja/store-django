@@ -159,6 +159,43 @@ class Product(TimeStampedModel):
             ),
         ]
 
+    _SIZE_ORDER = ["PP", "P", "M", "G", "GG", "XG", "G1", "G2", "G3", "G4"]
+
+    def available_sizes(self):
+        """Lista de tamanhos selecionáveis a partir do size_range."""
+        if not self.size_range:
+            return []
+        s = self.size_range.strip()
+        start = end = s
+        for sep in (" ao ", " a ", "-", "–"):
+            if sep in s:
+                start, _, end = s.partition(sep)
+                start, end = start.strip(), end.strip()
+                break
+        else:
+            return [s]
+        try:
+            start_n, end_n = int(start), int(end)
+            if start_n <= end_n and (end_n - start_n) <= 30:
+                return [f"{n:02d}" for n in range(start_n, end_n + 1, 2)]
+        except (ValueError, TypeError):
+            pass
+        def idx(x):
+            try:
+                return self._SIZE_ORDER.index(x.upper())
+            except ValueError:
+                return None
+        i, j = idx(start), idx(end)
+        if i is not None and j is not None and i <= j:
+            return self._SIZE_ORDER[i:j + 1]
+        return [start, end] if start != end else [start]
+
+    def available_colors(self):
+        """Lista de cores a partir do campo color (separadas por vírgula)."""
+        if not self.color:
+            return []
+        return [c.strip() for c in self.color.split(",") if c.strip()]
+
     def __str__(self):
         return self.name
 
