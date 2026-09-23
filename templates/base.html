@@ -151,8 +151,9 @@
     function addToCart(id, name, price, line, w6, w24) {
       const qtyEl = document.getElementById('qty-' + id);
       const qty = qtyEl ? (parseInt(qtyEl.innerText, 10) || 1) : 1;
+      const p = parseFloat(price) || 0;
       if (cart[id]) { cart[id].qty += qty; }
-      else { cart[id] = { id, name, price, line, qty, w6: w6 || null, w24: w24 || null }; }
+      else { cart[id] = { id, name, price: p, line, qty, w6: w6 ? parseFloat(w6) : null, w24: w24 ? parseFloat(w24) : null }; }
       if (qtyEl) qtyEl.innerText = 1;
       saveCart();
       updateCartUI();
@@ -161,14 +162,18 @@
 
     // Preço unitário conforme a faixa de quantidade (desconto de atacado)
     function unitPrice(item) {
-      if (item.w24 && item.qty >= 24) return item.w24;
-      if (item.w6 && item.qty >= 6) return item.w6;
-      return item.price;
+      const w24 = parseFloat(item.w24);
+      const w6 = parseFloat(item.w6);
+      if (!isNaN(w24) && item.qty >= 24) return w24;
+      if (!isNaN(w6) && item.qty >= 6) return w6;
+      return parseFloat(item.price) || 0;
     }
 
     function tierLabel(item) {
-      if (item.w24 && item.qty >= 24) return ' (caixa 24+)';
-      if (item.w6 && item.qty >= 6) return ' (atacado 6+)';
+      const w24 = parseFloat(item.w24);
+      const w6 = parseFloat(item.w6);
+      if (!isNaN(w24) && item.qty >= 24) return ' (caixa 24+)';
+      if (!isNaN(w6) && item.qty >= 6) return ' (atacado 6+)';
       return '';
     }
 
