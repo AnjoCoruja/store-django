@@ -45,21 +45,6 @@
           <h2 class="text-lg font-bold text-white mb-2">Descrição</h2>
           <p class="text-gray-300 text-sm leading-relaxed">{{ product.description|linebreaksbr }}</p>
         </div>
-        <!-- Seletor de tamanho -->
-        {% with sizes=product.size_range|expand_sizes %}
-        {% if sizes %}
-        <div>
-          <span class="text-xs text-slate-400 block mb-1.5">Tamanho:</span>
-          <div class="flex flex-wrap gap-2" id="sizes-{{ product.id }}">
-            {% for s in sizes %}
-            <button type="button" onclick="selectSize({{ product.id }}, '{{ s }}', this)"
-              class="size-btn px-3 py-2 text-sm font-semibold rounded-lg border border-slate-600 bg-slate-800 text-slate-300 hover:border-blue-500 hover:text-white transition"
-              data-size="{{ s }}">{{ s }}</button>
-            {% endfor %}
-          </div>
-        </div>
-        {% endif %}
-        {% endwith %}
         <!-- Adicionar ao carrinho -->
         <div class="flex items-center gap-3">
           <div class="flex items-center bg-slate-800 border border-slate-700 rounded-xl overflow-hidden">
