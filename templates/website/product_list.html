@@ -75,6 +75,32 @@
               {% endif %}
             </div>
           </div>
+          <!-- Seletor de tamanho -->
+          {% if product.available_sizes %}
+          <div>
+            <span class="text-xs text-slate-400 block mb-1.5">Tamanho:</span>
+            <div class="flex flex-wrap gap-1.5" id="sizes-{{ product.id }}">
+              {% for s in product.available_sizes %}
+              <button type="button" onclick="selectVariant({{ product.id }}, 'size', '{{ s }}', this)"
+                class="size-btn px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-600 bg-slate-800 text-slate-300 hover:border-blue-500 hover:text-white transition"
+                data-size="{{ s }}">{{ s }}</button>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+          <!-- Seletor de cor -->
+          {% if product.available_colors %}
+          <div>
+            <span class="text-xs text-slate-400 block mb-1.5">Cor:</span>
+            <div class="flex flex-wrap gap-1.5" id="colors-{{ product.id }}">
+              {% for c in product.available_colors %}
+              <button type="button" onclick="selectVariant({{ product.id }}, 'color', '{{ c }}', this)"
+                class="color-btn px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-600 bg-slate-800 text-slate-300 hover:border-emerald-500 hover:text-white transition"
+                data-color="{{ c }}">{{ c }}</button>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
           <!-- Controles de quantidade + botão Adicionar -->
           <div class="flex items-center gap-2">
             <div class="flex items-center bg-slate-800 border border-slate-700 rounded-xl overflow-hidden">
