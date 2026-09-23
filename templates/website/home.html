@@ -80,15 +80,17 @@
             <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-md hover:border-slate-700 transition duration-200 flex flex-col justify-between">
               <!-- Imagem do Produto -->
               <div class="h-48 bg-slate-800 relative overflow-hidden flex items-center justify-center">
+                <a href="{% url 'website:product_detail' product.slug %}" class="block w-full h-full">
                 {% with img=product.images.all.0 %}
                 {% if img %}
-                  <img src="{{ img.image.url }}" alt="{{ img.alt_text|default:product.name }}" class="w-full h-full object-cover" loading="lazy">
+                  <img src="{{ img.image.url }}" alt="{{ img.alt_text|default:product.name }}" class="w-full h-full object-cover hover:scale-105 transition duration-300" loading="lazy">
                 {% elif product.image_url %}
-                  <img src="{{ product.image_url }}" alt="{{ product.name }}" class="w-full h-full object-cover" loading="lazy">
+                  <img src="{{ product.image_url }}" alt="{{ product.name }}" class="w-full h-full object-cover hover:scale-105 transition duration-300" loading="lazy">
                 {% else %}
                   <i class="fa-solid fa-shirt text-slate-700 text-5xl"></i>
                 {% endif %}
                 {% endwith %}
+                </a>
                 <span class="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-bold rounded-full uppercase {% if product.line == 'verao' %}bg-red-600{% else %}bg-blue-600{% endif %} text-white">
                   {% if product.line == 'verao' %}Verão{% else %}Inverno{% endif %}
                 </span>
@@ -99,11 +101,18 @@
                   <h3 class="font-bold text-white text-base truncate">{{ product.name }}</h3>
                   <p class="text-xs text-gray-400 line-clamp-2 mt-1">{{ product.description|truncatewords:15 }}</p>
                 </div>
-                <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between">
+                <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2">
                   <span class="text-blue-400 font-extrabold text-lg">R$ {{ product.price }}</span>
-                  <a href="{% url 'website:product_detail' product.slug %}" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-medium px-3 py-2 rounded-lg transition">
-                    Ver Detalhes
-                  </a>
+                  <div class="flex items-center gap-1">
+                    <div class="flex items-center bg-slate-800 border border-slate-700 rounded-lg overflow-hidden">
+                      <button type="button" onclick="changeQty({{ product.id }}, -1)" class="px-2 py-1.5 text-slate-300 hover:bg-slate-700 text-sm font-bold">−</button>
+                      <span id="qty-{{ product.id }}" class="px-2 py-1.5 text-white text-sm font-semibold w-7 text-center">1</span>
+                      <button type="button" onclick="changeQty({{ product.id }}, 1)" class="px-2 py-1.5 text-slate-300 hover:bg-slate-700 text-sm font-bold">+</button>
+                    </div>
+                    <button onclick="addToCart({{ product.id }}, '{{ product.name|escapejs }}', {{ product.price }}, '{{ product.line }}')" class="bg-gradient-to-r from-red-600 to-blue-600 hover:from-red-500 hover:to-blue-500 text-white text-xs font-bold px-3 py-2 rounded-lg transition">
+                      Adicionar
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

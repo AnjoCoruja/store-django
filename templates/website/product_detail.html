@@ -45,6 +45,18 @@
           <h2 class="text-lg font-bold text-white mb-2">Descrição</h2>
           <p class="text-gray-300 text-sm leading-relaxed">{{ product.description|linebreaksbr }}</p>
         </div>
+        <!-- Adicionar ao carrinho -->
+        <div class="flex items-center gap-3">
+          <div class="flex items-center bg-slate-800 border border-slate-700 rounded-xl overflow-hidden">
+            <button type="button" onclick="changeQty({{ product.id }}, -1)" class="px-4 py-3 text-slate-300 hover:bg-slate-700 font-bold">−</button>
+            <span id="qty-{{ product.id }}" class="px-4 py-3 text-white font-semibold w-12 text-center">1</span>
+            <button type="button" onclick="changeQty({{ product.id }}, 1)" class="px-4 py-3 text-slate-300 hover:bg-slate-700 font-bold">+</button>
+          </div>
+          <button onclick="addToCart({{ product.id }}, '{{ product.name|escapejs }}', {{ product.price }}, '{{ product.line }}')"
+                  class="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-blue-600 hover:from-red-500 hover:to-blue-500 text-white font-bold rounded-xl transition shadow-lg">
+            Adicionar ao Carrinho
+          </button>
+        </div>
         <a href="https://wa.me/5511954294886?text=Olá! Tenho interesse no produto: {{ product.name|urlencode }}" target="_blank"
            class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3 rounded-xl transition shadow-lg">
           <i class="fa-brands fa-whatsapp text-lg"></i> Consultar pelo WhatsApp
