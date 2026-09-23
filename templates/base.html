@@ -160,20 +160,38 @@
       toggleCart();
     }
 
-    // Preço unitário conforme a faixa de quantidade (desconto de atacado)
-    function unitPrice(item) {
-      const w24 = parseFloat(item.w24);
-      const w6 = parseFloat(item.w6);
-      if (!isNaN(w24) && item.qty >= 24) return w24;
-      if (!isNaN(w6) && item.qty >= 6) return w6;
-      return parseFloat(item.price) || 0;
+    // Desconto por faixa baseado no TOTAL de peças do carrinho
+    // (somando todos os modelos). 6+ peças = -R$5/peça; 24+ = -R$7/peça.
+    function cartTotalQty() {
+      return Object.values(cart).reduce((acc, i) => acc + i.qty, 0);
     }
 
-    function tierLabel(item) {
-      const w24 = parseFloat(item.w24);
-      const w6 = parseFloat(item.w6);
-      if (!isNaN(w24) && item.qty >= 24) return ' (caixa 24+)';
-      if (!isNaN(w6) && item.qty >= 6) return ' (atacado 6+)';
+    function cartTier() {
+      const total = cartTotalQty();
+      if (total >= 24) return 'w24';
+      if (total >= 6) return 'w6';
+      return null;
+    }
+
+    // Preço unitário do item conforme a faixa do carrinho
+    function unitPrice(item) {
+      const tier = cartTier();
+      const base = parseFloat(item.price) || 0;
+      if (tier === 'w24') {
+        const w = parseFloat(item.w24);
+        return isNaN(w) ? Math.max(0, base - 7) : w;
+      }
+      if (tier === 'w6') {
+        const w = parseFloat(item.w6);
+        return isNaN(w) ? Math.max(0, base - 5) : w;
+      }
+      return base;
+    }
+
+    function tierLabel() {
+      const tier = cartTier();
+      if (tier === 'w24') return ' (caixa 24+)';
+      if (tier === 'w6') return ' (atacado 6+)';
       return '';
     }
 
@@ -183,7 +201,7 @@
       const totalElement = document.getElementById('cart-total');
       const items = Object.values(cart);
 
-      countBadge.innerText = items.reduce((acc, i) => acc + i.qty, 0);
+      countBadge.innerText = cartTotalQty();
 
       if (items.length === 0) {
         container.innerHTML = '<p class="text-slate-500 text-center mt-10">O carrinho está vazio.</p>';
@@ -200,7 +218,7 @@
           <div class="flex justify-between items-center bg-slate-800 p-3 rounded-xl gap-2">
             <div class="flex-grow">
               <h4 class="font-bold text-sm text-white">${item.name}</h4>
-              <span class="text-xs text-emerald-400">R$ ${up.toFixed(2)} x ${item.qty}${tierLabel(item)} = <strong>R$ ${subtotal.toFixed(2)}</strong></span>
+              <span class="text-xs text-emerald-400">R$ ${up.toFixed(2)} x ${item.qty}${tierLabel()} = <strong>R$ ${subtotal.toFixed(2)}</strong></span>
             </div>
             <div class="flex items-center gap-1">
               <button onclick="changeCartQty(${item.id}, -1)" class="w-6 h-6 bg-slate-700 hover:bg-slate-600 text-white rounded text-sm font-bold">−</button>
@@ -240,7 +258,7 @@
         const up = unitPrice(item);
         const subtotal = up * item.qty;
         total += subtotal;
-        mensagem += `• ${item.qty}x ${item.name} — R$ ${up.toFixed(2)}${tierLabel(item)} (subtotal: R$ ${subtotal.toFixed(2)})\n`;
+        mensagem += `• ${item.qty}x ${item.name} — R$ ${up.toFixed(2)}${tierLabel()} (subtotal: R$ ${subtotal.toFixed(2)})\n`;
       });
       mensagem += `\n*TOTAL DO PEDIDO: R$ ${total.toFixed(2)}*`;
       window.open(`https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(mensagem)}`, '_blank');
