@@ -29,14 +29,21 @@
           <li><a href="{% url 'website:about' %}" class="text-gray-300 hover:text-white transition">Sobre Nós</a></li>
         </ul>
       </nav>
-      <form action="{% url 'website:product_list' %}" method="get" role="search" class="flex items-center gap-2">
-        <label class="sr-only" for="search-input">Buscar produtos</label>
-        <input id="search-input" type="search" name="q" value="{{ query|default:'' }}" placeholder="Buscar…"
-               class="bg-slate-800 border border-slate-700 text-sm text-white rounded-lg px-3 py-1.5 w-32 sm:w-48 focus:outline-none focus:border-blue-500">
-        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-3 py-1.5 rounded-lg transition">
-          <i class="fa-solid fa-magnifying-glass"></i>
+      <div class="flex items-center gap-3">
+        <form action="{% url 'website:product_list' %}" method="get" role="search" class="hidden md:flex items-center gap-2">
+          <label class="sr-only" for="search-input">Buscar produtos</label>
+          <input id="search-input" type="search" name="q" value="{{ query|default:'' }}" placeholder="Buscar…"
+                 class="bg-slate-800 border border-slate-700 text-sm text-white rounded-lg px-3 py-1.5 w-32 sm:w-48 focus:outline-none focus:border-blue-500">
+          <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-3 py-1.5 rounded-lg transition">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </button>
+        </form>
+        <!-- Ícone do carrinho (sempre visível) -->
+        <button onclick="toggleCart()" aria-label="Abrir carrinho" class="relative bg-slate-800 hover:bg-slate-700 text-white p-2.5 rounded-full transition">
+          <i class="fa-solid fa-cart-shopping"></i>
+          <span id="cart-count" class="absolute -top-1 -right-1 bg-emerald-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold">0</span>
         </button>
-      </form>
+      </div>
     </div>
   </header>
 
@@ -96,6 +103,132 @@
       &copy; {% now "Y" %} Red Blue Line. Todos os direitos reservados.
     </div>
   </footer>
+
+  <!-- ===== Carrinho global (todas as páginas) ===== -->
+  <div id="cart-sidebar" class="fixed inset-y-0 right-0 w-full sm:w-96 bg-slate-900 border-l border-slate-800 shadow-2xl z-50 transform translate-x-full transition-transform duration-300 flex flex-col">
+    <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+      <h2 class="text-lg font-bold text-white">Seu Carrinho</h2>
+      <button onclick="toggleCart()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+    </div>
+    <div id="cart-items" class="p-5 flex-grow overflow-y-auto space-y-3">
+      <p class="text-slate-500 text-center mt-10">O carrinho está vazio.</p>
+    </div>
+    <div class="p-5 border-t border-slate-800 bg-slate-950">
+      <div class="flex justify-between mb-4 font-bold text-lg text-white">
+        <span>Total:</span>
+        <span id="cart-total" class="text-emerald-400">R$ 0,00</span>
+      </div>
+      <button onclick="finalizarWhatsApp()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition flex items-center justify-center gap-2">
+        <i class="fa-brands fa-whatsapp text-xl"></i>
+        <span>Finalizar pelo WhatsApp</span>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // ===== Estado global do carrinho (persiste entre páginas) =====
+    const WHATSAPP_NUMERO = '5511954294886';
+    let cart = {};
+    try { cart = JSON.parse(localStorage.getItem('rbl_cart') || '{}'); } catch (e) { cart = {}; }
+
+    function saveCart() {
+      localStorage.setItem('rbl_cart', JSON.stringify(cart));
+    }
+
+    function toggleCart() {
+      document.getElementById('cart-sidebar').classList.toggle('translate-x-full');
+    }
+
+    // Controle de quantidade no card do produto (mínimo 1)
+    function changeQty(productId, delta) {
+      const el = document.getElementById('qty-' + productId);
+      if (!el) return;
+      let q = parseInt(el.innerText, 10) || 1;
+      q = Math.max(1, q + delta);
+      el.innerText = q;
+    }
+
+    function addToCart(id, name, price, line) {
+      const qtyEl = document.getElementById('qty-' + id);
+      const qty = qtyEl ? (parseInt(qtyEl.innerText, 10) || 1) : 1;
+      if (cart[id]) { cart[id].qty += qty; }
+      else { cart[id] = { id, name, price, line, qty }; }
+      if (qtyEl) qtyEl.innerText = 1;
+      saveCart();
+      updateCartUI();
+      toggleCart();
+    }
+
+    function updateCartUI() {
+      const container = document.getElementById('cart-items');
+      const countBadge = document.getElementById('cart-count');
+      const totalElement = document.getElementById('cart-total');
+      const items = Object.values(cart);
+
+      countBadge.innerText = items.reduce((acc, i) => acc + i.qty, 0);
+
+      if (items.length === 0) {
+        container.innerHTML = '<p class="text-slate-500 text-center mt-10">O carrinho está vazio.</p>';
+        totalElement.innerText = 'R$ 0,00';
+        return;
+      }
+
+      let html = '', total = 0;
+      items.forEach(item => {
+        const subtotal = item.price * item.qty;
+        total += subtotal;
+        html += `
+          <div class="flex justify-between items-center bg-slate-800 p-3 rounded-xl gap-2">
+            <div class="flex-grow">
+              <h4 class="font-bold text-sm text-white">${item.name}</h4>
+              <span class="text-xs text-emerald-400">R$ ${item.price.toFixed(2)} x ${item.qty} = <strong>R$ ${subtotal.toFixed(2)}</strong></span>
+            </div>
+            <div class="flex items-center gap-1">
+              <button onclick="changeCartQty(${item.id}, -1)" class="w-6 h-6 bg-slate-700 hover:bg-slate-600 text-white rounded text-sm font-bold">−</button>
+              <button onclick="changeCartQty(${item.id}, 1)" class="w-6 h-6 bg-slate-700 hover:bg-slate-600 text-white rounded text-sm font-bold">+</button>
+              <button onclick="removeFromCart(${item.id})" class="text-red-400 hover:text-red-300 text-sm ml-1"><i class="fa-solid fa-trash"></i></button>
+            </div>
+          </div>`;
+      });
+
+      container.innerHTML = html;
+      totalElement.innerText = `R$ ${total.toFixed(2)}`;
+    }
+
+    function changeCartQty(id, delta) {
+      if (!cart[id]) return;
+      cart[id].qty += delta;
+      if (cart[id].qty <= 0) delete cart[id];
+      saveCart();
+      updateCartUI();
+    }
+
+    function removeFromCart(id) {
+      delete cart[id];
+      saveCart();
+      updateCartUI();
+    }
+
+    function finalizarWhatsApp() {
+      const items = Object.values(cart);
+      if (items.length === 0) {
+        alert('Seu carrinho está vazio.');
+        return;
+      }
+      let mensagem = 'Olá! Gostaria de fazer o seguinte pedido na Red Blue Line:\n\n';
+      let total = 0;
+      items.forEach(item => {
+        const subtotal = item.price * item.qty;
+        total += subtotal;
+        mensagem += `• ${item.qty}x ${item.name} — R$ ${item.price.toFixed(2)} (subtotal: R$ ${subtotal.toFixed(2)})\n`;
+      });
+      mensagem += `\n*TOTAL DO PEDIDO: R$ ${total.toFixed(2)}*`;
+      window.open(`https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(mensagem)}`, '_blank');
+    }
+
+    // Atualiza o badge ao carregar qualquer página
+    document.addEventListener('DOMContentLoaded', updateCartUI);
+  </script>
 
 </body>
 </html>
