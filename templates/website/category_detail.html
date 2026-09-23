@@ -40,7 +40,7 @@
               <span id="qty-{{ product.id }}" class="px-2 py-1.5 text-white text-sm font-semibold w-7 text-center">1</span>
               <button type="button" onclick="changeQty({{ product.id }}, 1)" class="px-2 py-1.5 text-slate-300 hover:bg-slate-700 text-sm font-bold">+</button>
             </div>
-            <button onclick="addToCart({{ product.id }}, '{{ product.name|escapejs }}', {{ product.price }}, '{{ product.line }}')" class="bg-gradient-to-r from-red-600 to-blue-600 hover:from-red-500 hover:to-blue-500 text-white text-xs font-bold px-3 py-2 rounded-lg transition">
+            <button onclick="addToCart({{ product.id }}, '{{ product.name|escapejs }}', {{ product.price }}, '{{ product.line }}, {{ product.wholesale_price_6|default:'null' }}, {{ product.wholesale_price_24|default:'null' }}')" class="bg-gradient-to-r from-red-600 to-blue-600 hover:from-red-500 hover:to-blue-500 text-white text-xs font-bold px-3 py-2 rounded-lg transition">
               Adicionar
             </button>
           </div>
