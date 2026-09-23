@@ -41,10 +41,13 @@ class ProductListSerializer(serializers.ModelSerializer):
             "name",
             "slug",
             "price",
+            "wholesale_price_6",
+            "wholesale_price_24",
             "stock",
             "line",
             "category",
             "primary_image",
+            "image_url",
         ]
 
     def get_primary_image(self, obj):
@@ -71,8 +74,11 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             "description",
             "price",
             "wholesale_price",
+            "wholesale_price_6",
+            "wholesale_price_24",
             "line",
             "stock",
+            "image_url",
             "category",
             "images",
             "created_at",
