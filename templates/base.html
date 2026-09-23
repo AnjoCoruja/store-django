@@ -148,15 +148,28 @@
       el.innerText = q;
     }
 
-    function addToCart(id, name, price, line) {
+    function addToCart(id, name, price, line, w6, w24) {
       const qtyEl = document.getElementById('qty-' + id);
       const qty = qtyEl ? (parseInt(qtyEl.innerText, 10) || 1) : 1;
       if (cart[id]) { cart[id].qty += qty; }
-      else { cart[id] = { id, name, price, line, qty }; }
+      else { cart[id] = { id, name, price, line, qty, w6: w6 || null, w24: w24 || null }; }
       if (qtyEl) qtyEl.innerText = 1;
       saveCart();
       updateCartUI();
       toggleCart();
+    }
+
+    // Preço unitário conforme a faixa de quantidade (desconto de atacado)
+    function unitPrice(item) {
+      if (item.w24 && item.qty >= 24) return item.w24;
+      if (item.w6 && item.qty >= 6) return item.w6;
+      return item.price;
+    }
+
+    function tierLabel(item) {
+      if (item.w24 && item.qty >= 24) return ' (caixa 24+)';
+      if (item.w6 && item.qty >= 6) return ' (atacado 6+)';
+      return '';
     }
 
     function updateCartUI() {
@@ -175,13 +188,14 @@
 
       let html = '', total = 0;
       items.forEach(item => {
-        const subtotal = item.price * item.qty;
+        const up = unitPrice(item);
+        const subtotal = up * item.qty;
         total += subtotal;
         html += `
           <div class="flex justify-between items-center bg-slate-800 p-3 rounded-xl gap-2">
             <div class="flex-grow">
               <h4 class="font-bold text-sm text-white">${item.name}</h4>
-              <span class="text-xs text-emerald-400">R$ ${item.price.toFixed(2)} x ${item.qty} = <strong>R$ ${subtotal.toFixed(2)}</strong></span>
+              <span class="text-xs text-emerald-400">R$ ${up.toFixed(2)} x ${item.qty}${tierLabel(item)} = <strong>R$ ${subtotal.toFixed(2)}</strong></span>
             </div>
             <div class="flex items-center gap-1">
               <button onclick="changeCartQty(${item.id}, -1)" class="w-6 h-6 bg-slate-700 hover:bg-slate-600 text-white rounded text-sm font-bold">−</button>
@@ -218,9 +232,10 @@
       let mensagem = 'Olá! Gostaria de fazer o seguinte pedido na Red Blue Line:\n\n';
       let total = 0;
       items.forEach(item => {
-        const subtotal = item.price * item.qty;
+        const up = unitPrice(item);
+        const subtotal = up * item.qty;
         total += subtotal;
-        mensagem += `• ${item.qty}x ${item.name} — R$ ${item.price.toFixed(2)} (subtotal: R$ ${subtotal.toFixed(2)})\n`;
+        mensagem += `• ${item.qty}x ${item.name} — R$ ${up.toFixed(2)}${tierLabel(item)} (subtotal: R$ ${subtotal.toFixed(2)})\n`;
       });
       mensagem += `\n*TOTAL DO PEDIDO: R$ ${total.toFixed(2)}*`;
       window.open(`https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(mensagem)}`, '_blank');
