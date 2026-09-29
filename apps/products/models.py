@@ -130,7 +130,13 @@ class Product(TimeStampedModel):
         db_index=True,
         verbose_name="ID do arquivo no Google Drive",
     )
-    image_url = models.URLField(blank=True, default="", verbose_name="URL da imagem (Drive)")
+    drive_file_name = models.CharField(
+        max_length=255, blank=True, default="", verbose_name="Nome do arquivo no Drive"
+    )
+    drive_md5 = models.CharField(
+        max_length=64, blank=True, default="", verbose_name="Checksum da imagem no Drive"
+    )
+    image_url = models.URLField(blank=True, default="", verbose_name="URL externa da imagem (legado)")
     stock = models.PositiveIntegerField(default=0)
     category = models.ForeignKey(
         Category,
