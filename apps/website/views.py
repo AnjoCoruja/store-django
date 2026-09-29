@@ -21,7 +21,7 @@ def home(request):
         .select_related("category")
         .prefetch_related("images")[:8]
     )
-    categories = Category.objects.filter(is_active=True)[:6]
+    categories = Category.objects.filter(is_active=True, parent__isnull=True)[:6]
     return render(
         request,
         "website/home.html",
@@ -73,19 +73,79 @@ def product_detail(request, slug):
     )
 
 
+LINES = (("verao", "Verão"), ("inverno", "Inverno"))
+
+
+def _subcategory_lines(sub, products_by_cat):
+    """Abas em que uma subcategoria aparece: linha explícita ou linhas dos produtos."""
+    if sub.line:
+        return {sub.line}
+    return products_by_cat.get(sub.pk, set())
+
+
 def category_detail(request, slug):
-    category = get_object_or_404(Category, slug=slug, is_active=True)
+    category = get_object_or_404(
+        Category.objects.select_related("parent"), slug=slug, is_active=True
+    )
+    category_ids = category.descendant_ids()
     products = (
-        Product.objects.filter(category=category, is_active=True, is_published=True)
+        Product.objects.filter(
+            category_id__in=category_ids,
+            category__is_active=True,
+            is_active=True,
+            is_published=True,
+        )
         .select_related("category")
         .prefetch_related("images")
     )
+
+    subcategories = list(category.subcategories.filter(is_active=True))
+
+    # Mapeia subcategoria -> linhas presentes nos produtos dela (e descendentes).
+    products_by_cat = {}
+    for sub in subcategories:
+        lines = set(
+            Product.objects.filter(
+                category_id__in=sub.descendant_ids(),
+                is_active=True,
+                is_published=True,
+            ).values_list("line", flat=True)
+        )
+        products_by_cat[sub.pk] = lines
+
+    active_line = request.GET.get("linha", "")
+    valid_lines = {code for code, _ in LINES}
+    if active_line not in valid_lines:
+        active_line = ""
+
+    tabs = []
+    for code, label in LINES:
+        tab_subs = [s for s in subcategories if code in _subcategory_lines(s, products_by_cat)]
+        tabs.append(
+            {
+                "code": code,
+                "label": label,
+                "subcategories": tab_subs,
+                "product_count": sum(1 for p in products if p.line == code),
+            }
+        )
+
+    if not active_line:
+        # Abre na primeira aba que tem conteúdo (padrão: Verão).
+        active_line = next(
+            (t["code"] for t in tabs if t["product_count"] or t["subcategories"]),
+            "verao",
+        )
+
     return render(
         request,
         "website/category_detail.html",
         {
             "category": category,
             "products": products,
+            "subcategories": subcategories,
+            "tabs": tabs,
+            "active_line": active_line,
             "meta_title": f"{category.name} — Loja",
             "meta_description": (category.description or category.name)[:155],
         },
