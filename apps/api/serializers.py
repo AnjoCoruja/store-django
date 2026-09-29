@@ -10,6 +10,7 @@ from apps.products.models import Category, Product, ProductImage
 
 class CategorySerializer(serializers.ModelSerializer):
     product_count = serializers.IntegerField(read_only=True)
+    parent = serializers.SlugRelatedField(slug_field="slug", read_only=True)
 
     class Meta:
         model = Category
@@ -19,6 +20,8 @@ class CategorySerializer(serializers.ModelSerializer):
             "slug",
             "description",
             "image",
+            "parent",
+            "line",
             "sort_order",
             "product_count",
         ]
