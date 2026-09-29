@@ -1,16 +1,58 @@
 {% extends "base.html" %}
+{% load l10n %}
 
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
+  <nav aria-label="Trilha" class="text-xs text-gray-400">
+    <a href="{% url 'website:home' %}" class="hover:text-white">Início</a>
+    {% if category.parent %} › <a href="{% url 'website:category_detail' category.parent.slug %}" class="hover:text-white">{{ category.parent.name }}</a>{% endif %}
+    › <span class="text-gray-200">{{ category.name }}</span>
+  </nav>
   <div class="border-b border-slate-800 pb-4">
     <h1 class="text-3xl font-extrabold text-white">{{ category.name }}</h1>
     {% if category.description %}<p class="text-gray-400 text-sm mt-2">{{ category.description }}</p>{% endif %}
   </div>
 
+  <!-- Abas Verão / Inverno -->
+  <div role="tablist" aria-label="Estação" class="flex gap-3" id="season-tabs">
+    {% for tab in tabs %}
+    <a href="?linha={{ tab.code }}" role="tab" data-tab="{{ tab.code }}"
+       aria-selected="{% if tab.code == active_line %}true{% else %}false{% endif %}"
+       onclick="return switchSeason('{{ tab.code }}')"
+       class="season-tab px-5 py-2 rounded-full text-sm font-bold border transition flex items-center gap-2
+              {% if tab.code == 'verao' %}border-red-800 text-red-300 data-[active=true]:bg-red-600 data-[active=true]:text-white data-[active=true]:border-red-500
+              {% else %}border-blue-800 text-blue-300 data-[active=true]:bg-blue-600 data-[active=true]:text-white data-[active=true]:border-blue-500{% endif %}"
+       data-active="{% if tab.code == active_line %}true{% else %}false{% endif %}">
+      <i class="fa-solid {% if tab.code == 'verao' %}fa-sun{% else %}fa-snowflake{% endif %}"></i>
+      {{ tab.label }}
+      <span class="text-[10px] bg-black/30 rounded-full px-2 py-0.5">{{ tab.product_count }}</span>
+    </a>
+    {% endfor %}
+  </div>
+
+  <!-- Subcategorias de cada aba -->
+  {% for tab in tabs %}
+  <div class="season-panel" data-panel="{{ tab.code }}" {% if tab.code != active_line %}hidden{% endif %}>
+    {% if tab.subcategories %}
+    <h2 class="text-sm uppercase tracking-wider text-gray-400 font-semibold mb-3">Subcategorias — {{ tab.label }}</h2>
+    <div class="flex flex-wrap gap-2">
+      {% for sub in tab.subcategories %}
+      <a href="{% url 'website:category_detail' sub.slug %}?linha={{ tab.code }}"
+         class="subcategory-link px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm text-gray-200 hover:border-{% if tab.code == 'verao' %}red{% else %}blue{% endif %}-500 transition">
+        {{ sub.name }}
+      </a>
+      {% endfor %}
+    </div>
+    {% elif subcategories %}
+    <p class="text-xs text-gray-500">Nenhuma subcategoria de {{ tab.label|lower }} ainda.</p>
+    {% endif %}
+  </div>
+  {% endfor %}
+
   {% if products %}
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" id="category-grid">
     {% for product in products %}
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-md hover:border-slate-700 transition duration-200 flex flex-col justify-between">
+    <div class="product-card bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-md hover:border-slate-700 transition duration-200 flex-col justify-between" data-line="{{ product.line }}" style="display: {% if product.line == active_line %}flex{% else %}none{% endif %}">
       <div class="h-48 bg-slate-800 relative overflow-hidden flex items-center justify-center">
         <a href="{% url 'website:product_detail' product.slug %}" class="block w-full h-full">
         {% with img=product.images.all.0 %}
@@ -40,7 +82,7 @@
               <span id="qty-{{ product.id }}" class="px-2 py-1.5 text-white text-sm font-semibold w-7 text-center">1</span>
               <button type="button" onclick="changeQty({{ product.id }}, 1)" class="px-2 py-1.5 text-slate-300 hover:bg-slate-700 text-sm font-bold">+</button>
             </div>
-            <button onclick="addToCart({{ product.id }}, '{{ product.name|escapejs }}', {{ product.price }}, '{{ product.line }}, {{ product.wholesale_price_6|default:'null' }}, {{ product.wholesale_price_24|default:'null' }}')" class="bg-gradient-to-r from-red-600 to-blue-600 hover:from-red-500 hover:to-blue-500 text-white text-xs font-bold px-3 py-2 rounded-lg transition">
+            <button onclick="addToCart({{ product.id|unlocalize }}, '{{ product.name|escapejs }}', {{ product.price|unlocalize }}, '{{ product.line }}', {{ product.wholesale_price_6|default:'null'|unlocalize }}, {{ product.wholesale_price_24|default:'null'|unlocalize }})" class="bg-gradient-to-r from-red-600 to-blue-600 hover:from-red-500 hover:to-blue-500 text-white text-xs font-bold px-3 py-2 rounded-lg transition">
               Adicionar
             </button>
           </div>
@@ -49,6 +91,7 @@
     </div>
     {% endfor %}
   </div>
+  <p id="season-empty" class="text-center text-gray-400 py-10" hidden>Nenhum produto desta estação nesta categoria ainda.</p>
   {% else %}
   <div class="bg-slate-900/50 border border-slate-800/80 rounded-2xl p-12 text-center space-y-3">
     <div class="w-12 h-12 bg-slate-800 text-slate-500 rounded-full flex items-center justify-center mx-auto text-lg">
@@ -58,4 +101,25 @@
   </div>
   {% endif %}
 </div>
+<script>
+  function switchSeason(line) {
+    document.querySelectorAll('.season-tab').forEach(t => {
+      const on = t.dataset.tab === line;
+      t.dataset.active = on ? 'true' : 'false';
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    document.querySelectorAll('.season-panel').forEach(p => { p.hidden = p.dataset.panel !== line; });
+    let visible = 0;
+    document.querySelectorAll('#category-grid .product-card').forEach(c => {
+      const show = c.dataset.line === line;
+      c.style.display = show ? 'flex' : 'none';
+      if (show) visible++;
+    });
+    const empty = document.getElementById('season-empty');
+    if (empty) empty.hidden = visible > 0;
+    history.replaceState(null, '', '?linha=' + line);
+    return false;
+  }
+  document.addEventListener('DOMContentLoaded', () => switchSeason('{{ active_line }}'));
+</script>
 {% endblock %}
