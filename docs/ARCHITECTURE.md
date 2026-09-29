@@ -7,11 +7,13 @@
 ## 1. Visão Geral
 
 E-commerce em Django com API REST preparada desde o início para ser operada por
-agentes de IA (via n8n/Telegram). O Django é a fonte de verdade; o n8n e os
-agentes são clientes da API — o site continua funcionando com o n8n offline.
+agentes de IA. O Django é a fonte de verdade e também executa a automação de
+catálogo: o worker `sync_drive` lê as fotos do Google Drive e publica os produtos
+(sem n8n — ver ADR-13).
 
 ```text
-Telegram → n8n → AI Orchestrator → Website Agent → Django REST API → Django → PostgreSQL → Website
+Google Drive → Django (sync_drive + legenda IA) → services/ORM → PostgreSQL → Website
+Agentes de IA → Django REST API (/api/v1/agent/) → Django → PostgreSQL → Website
 ```
 
 ### Metas arquiteturais
@@ -39,6 +41,7 @@ Telegram → n8n → AI Orchestrator → Website Agent → Django REST API → D
 | ADR-10 | Settings divididos: `base.py`, `development.py`, `testing.py`, `production.py` | Ambientes isolados, segredos só em env |
 | ADR-11 | Slugs únicos com sufixo automático em colisão | SEO + unicidade sem erro 500 |
 | ADR-12 | Rate limiting (DRF throttling) apenas nos endpoints do agente | Proteção mínima sem complexidade |
+| ADR-13 | Automação Drive → site 100% Django (`apps.drive_sync`), n8n removido | Uma só base de código, testável com pytest, sem serviço externo nem token de agente para sincronizar |
 
 ---
 
@@ -184,7 +187,7 @@ Env vars: `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DJANGO_SETTINGS_MODULE`,
 | 7 | API do agente + auth + auditoria + confirmação | testes de segurança |
 | 8 | ngrok + teste externo | request externo OK |
 | 9 | Suíte completa + cobertura | suite verde |
-| 10–13 | n8n / LangGraph / Website Agent / E2E | conforme prompt |
+| 10–13 | Sync Drive em Django / Agente IA / E2E | ver FASE 15 |
 
 ---
 
@@ -239,3 +242,16 @@ Env vars: `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DJANGO_SETTINGS_MODULE`,
 - Lacunas cobertas nesta fase: validações de domínio (preço/stock inválido, ausente, negativo), `__str__` e auto-expiração de PendingAction, normalização de usuário no `create_agent_token`, fallback de `primary_image` sem prefetch, guarda `perform_destroy`, throttle sem token.
 - Linhas não cobertas restantes são triviais e aceitas: views.py placeholder de apps sem view (audit/products), `__str__`/upload-path validators em products/models.py, e o ramo `validate_price` do serializer (o MinValueValidator do model dispara antes — comportamento verificado no teste).
 - Observação: a suíte roda em ~1,1s (SQLite in-memory).
+
+## FASE 15 — Remoção do n8n: sincronização Google Drive 100% Django (2026-09-29)
+
+- Novo app `apps.drive_sync` substitui o workflow n8n que chamava `POST /api/v1/agent/sync/product/` (endpoint removido).
+- Estrutura: `<raiz>/<Categoria>/<Nome - Cor - Tamanhos - Preço - Atacado 6+ - Caixa 24+>.ext`; também aceita `_` como separador. Imagens na raiz → categoria "Geral"; subpastas herdam a categoria.
+- `parser.py`: extrai nome, cor, tamanhos e preços do nome do arquivo (vírgula ou ponto decimal; número inteiro só vira preço a partir da 4ª posição, preservando tamanhos numéricos como "38").
+- `client.py`: Google Drive API v3 via service account, escopo somente leitura (`drive.readonly`), paginação e suporte a shared drives.
+- `services.sync_drive()`: idempotente por `drive_file_id` + `drive_md5`. Foto nova → cria e publica; renomeada → atualiza dados sem baixar de novo; substituída → baixa, troca a imagem primária e refaz a legenda; movida → troca categoria/linha; removida → despublica (soft). Sem preço → criado despublicado. Imagem inválida ou > 5 MB é reportada sem interromper o ciclo. A listagem é feita antes de qualquer despublicação, então falha na API do Drive não esconde produtos.
+- `describer.py`: legenda de venda gerada por IA (API compatível com OpenAI, com a foto) e fallback determinístico quando a IA não está configurada ou falha.
+- Imagens agora são baixadas para `ProductImage` (mídia do Django); `image_url` fica como legado. Novos campos `drive_file_name` e `drive_md5` (migração `products.0004`).
+- Worker: `python manage.py sync_drive [--watch] [--interval N]`. Toda criação/atualização/despublicação grava AuditLog com `actor_id="drive-sync"`.
+- Linha (Red/Blue) detectada por palavras "inverno/frio/blue" na pasta ou no arquivo.
+- 120 testes passando, cobertura 97%.
