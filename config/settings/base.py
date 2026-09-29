@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     "apps.audit",
     "apps.website",
     "apps.api",
+    "apps.drive_sync",
 ]
 
 MIDDLEWARE = [
@@ -103,6 +104,17 @@ REST_FRAMEWORK = {
         "agent": "120/minute",
     },
 }
+
+# Google Drive sync (apps.drive_sync) — replaces the former n8n workflow.
+DRIVE_ROOT_FOLDER_ID = os.environ.get("DRIVE_ROOT_FOLDER_ID", "")
+GOOGLE_SERVICE_ACCOUNT_FILE = os.environ.get("GOOGLE_SERVICE_ACCOUNT_FILE", "")
+GOOGLE_SERVICE_ACCOUNT_JSON = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON", "")
+DRIVE_SYNC_INTERVAL = int(os.environ.get("DRIVE_SYNC_INTERVAL", "60"))
+
+# AI captions (any OpenAI-compatible chat-completions API). Optional.
+AI_API_BASE = os.environ.get("AI_API_BASE", "https://api.openai.com/v1")
+AI_API_KEY = os.environ.get("AI_API_KEY", "")
+AI_MODEL = os.environ.get("AI_MODEL", "")
 
 LOGGING = {
     "version": 1,

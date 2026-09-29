@@ -35,11 +35,21 @@ class ProductAdmin(admin.ModelAdmin):
     list_editable = ("price", "stock")
     inlines = [ProductImageInline]
     actions = ("publish_products", "unpublish_products")
-    readonly_fields = ("created_at", "updated_at")
+    readonly_fields = ("created_at", "updated_at", "drive_file_id", "drive_file_name")
     fieldsets = (
         (None, {"fields": ("name", "slug", "description", "category")}),
         ("Preço e estoque", {"fields": ("price", "wholesale_price", "stock")}),
         ("Visibilidade", {"fields": ("is_active", "is_published")}),
+        (
+            "Google Drive",
+            {
+                "fields": (
+                    "color", "size_range", "wholesale_price_6",
+                    "wholesale_price_24", "drive_file_name", "drive_file_id",
+                ),
+                "classes": ("collapse",),
+            },
+        ),
         ("Datas", {"fields": ("created_at", "updated_at"), "classes": ("collapse",)}),
     )
 

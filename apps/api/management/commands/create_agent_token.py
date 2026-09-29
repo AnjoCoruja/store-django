@@ -1,7 +1,7 @@
 """Provision a service user + API token for the agent (idempotent).
 
 Usage:
-    python manage.py create_agent_token agent-n8n [--rotate]
+    python manage.py create_agent_token agent-bot [--rotate]
 
 Prints the token to stdout exactly once per rotation — store it in the
 orchestrator's secret manager (never in code or version control).

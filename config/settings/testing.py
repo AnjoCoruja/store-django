@@ -14,3 +14,8 @@ PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {  # noqa: F405
     "agent": "10000/minute",
 }
+
+DRIVE_ROOT_FOLDER_ID = "root-test"
+AI_API_KEY = ""
+AI_MODEL = ""
+MEDIA_ROOT = BASE_DIR / ".test-media"  # noqa: F405
