@@ -46,6 +46,24 @@ class Category(TimeStampedModel):
             validate_image_size,
         ],
     )
+    parent = models.ForeignKey(
+        "self",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="subcategories",
+        verbose_name="Categoria pai",
+        help_text="Deixe vazio para categoria principal; preencha para torná-la subcategoria.",
+    )
+    line = models.CharField(
+        max_length=10,
+        choices=[("verao", "Verão / Calor"), ("inverno", "Inverno / Frio")],
+        blank=True,
+        default="",
+        db_index=True,
+        verbose_name="Linha (estação)",
+        help_text="Aba em que a subcategoria aparece. Vazio = detectada pelos produtos.",
+    )
     is_active = models.BooleanField(default=True)
     sort_order = models.PositiveIntegerField(default=0)
 
@@ -54,7 +72,33 @@ class Category(TimeStampedModel):
         verbose_name_plural = "categories"
 
     def __str__(self):
+        if self.parent_id:
+            return f"{self.parent.name} › {self.name}"
         return self.name
+
+    def clean(self):
+        super().clean()
+        if self.parent_id:
+            if self.pk and self.parent_id == self.pk:
+                raise ValidationError({"parent": "Uma categoria não pode ser pai dela mesma."})
+            ancestor = self.parent
+            while ancestor is not None:
+                if self.pk and ancestor.pk == self.pk:
+                    raise ValidationError({"parent": "Hierarquia circular não é permitida."})
+                ancestor = ancestor.parent
+
+    def descendant_ids(self):
+        """IDs desta categoria e de todas as subcategorias (recursivo)."""
+        ids = [self.pk]
+        frontier = [self.pk]
+        while frontier:
+            children = list(
+                Category.objects.filter(parent_id__in=frontier).values_list("pk", flat=True)
+            )
+            children = [c for c in children if c not in ids]
+            ids.extend(children)
+            frontier = children
+        return ids
 
     def save(self, *args, **kwargs):
         if not self.slug:
