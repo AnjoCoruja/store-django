@@ -63,5 +63,14 @@ class CategoryAgentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        fields = ["id", "name", "slug", "description", "is_active", "sort_order"]
+        fields = ["id", "name", "slug", "description", "parent", "line", "is_active", "sort_order"]
         read_only_fields = ["id", "slug"]
+
+    def validate_parent(self, value):
+        if value is not None and self.instance is not None:
+            ancestor = value
+            while ancestor is not None:
+                if ancestor.pk == self.instance.pk:
+                    raise serializers.ValidationError("Hierarquia circular não é permitida.")
+                ancestor = ancestor.parent
+        return value
