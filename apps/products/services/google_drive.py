@@ -15,6 +15,8 @@ Estrutura de pastas esperada dentro da pasta raiz (GOOGLE_DRIVE_ROOT_FOLDER_ID):
 - Pastas de 2º nível viram categorias (abas); níveis mais fundos viram subcategorias.
 - Cada imagem vira um produto; o nome do arquivo traz nome, cor, tamanhos e preço.
 """
+from __future__ import annotations
+
 import html
 import logging
 import re
