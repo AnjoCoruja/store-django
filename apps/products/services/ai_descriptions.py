@@ -3,6 +3,8 @@
 O modelo recebe a foto do produto e os dados extraídos do nome do arquivo
 (nome, cor, tamanhos, preço) e devolve uma descrição de vitrine em português.
 """
+from __future__ import annotations
+
 import base64
 import logging
 
