@@ -1,4 +1,6 @@
 """Sincroniza pastas/fotos do Google Drive com Categorias e Produtos."""
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 
@@ -7,7 +9,14 @@ from django.db import transaction
 from apps.products.filename_parser import detect_season, parse_filename
 from apps.products.models import Category, Product
 
-from .google_drive import DriveFolder, extract_folder_id, get_catalog_client, public_image_url
+from .google_drive import (
+    DriveCatalogClient,
+    DriveFolder,
+    PublicDriveClient,
+    extract_folder_id,
+    get_catalog_client,
+    public_image_url,
+)
 
 logger = logging.getLogger("apps.products")
 
@@ -27,7 +36,7 @@ class SyncReport:
 
 
 class DriveSync:
-    def __init__(self, client: DriveCatalogClient, describer=None, regenerate_descriptions=False,
+    def __init__(self, client: DriveCatalogClient | PublicDriveClient, describer=None, regenerate_descriptions=False,
                  unpublish_missing=False):
         self.client = client
         self.describer = describer
