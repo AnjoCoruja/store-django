@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8" id="shop">
+
+  <div class="text-center space-y-2">
+    <h1 class="text-4xl font-extrabold"><span class="text-red-500">VERÃO</span> <span class="text-slate-500">|</span> <span class="text-blue-500">INVERNO</span></h1>
+    <p class="text-slate-400">1. Escolha a estação · 2. Escolha a categoria · 3. Escolha cor, tamanho e quantidade · 4. Finalize no WhatsApp</p>
+  </div>
+
+  <!-- 1) Abas de estação -->
+  <div role="tablist" aria-label="Estação" class="flex justify-center gap-4">
+    {% for season in seasons %}
+    <button type="button" role="tab" data-season-tab="{{ season.code }}" onclick="selectSeason('{{ season.code }}')"
+      class="season-tab px-8 py-3 rounded-2xl text-base font-extrabold border-2 transition flex items-center gap-2
+        {% if season.code == 'verao' %}border-red-700 text-red-300 data-[active=true]:bg-red-600 data-[active=true]:text-white
+        {% else %}border-blue-700 text-blue-300 data-[active=true]:bg-blue-600 data-[active=true]:text-white{% endif %}"
+      data-active="{% if season.code == active_line %}true{% else %}false{% endif %}">
+      <i class="fa-solid {% if season.code == 'verao' %}fa-sun{% else %}fa-snowflake{% endif %}"></i> {{ season.label }}
+    </button>
+    {% endfor %}
+  </div>
+
+  {% for season in seasons %}
+  <section class="season-panel space-y-6" data-season-panel="{{ season.code }}" {% if season.code != active_line %}hidden{% endif %}>
+    {% if season.categories %}
+    <!-- 2) Abas de categoria da estação -->
+    <div role="tablist" aria-label="Categorias de {{ season.label }}" class="flex flex-wrap justify-center gap-2">
+      {% for entry in season.categories %}
+      <button type="button" role="tab" data-cat-tab="{{ season.code }}-{{ entry.category.slug }}"
+        onclick="selectCategory('{{ season.code }}', '{{ entry.category.slug }}')"
+        class="cat-tab px-4 py-2 rounded-full text-sm font-semibold border border-slate-700 bg-slate-900 text-slate-300 transition
+          {% if season.code == 'verao' %}data-[active=true]:border-red-500 data-[active=true]:bg-red-950 data-[active=true]:text-white
+          {% else %}data-[active=true]:border-blue-500 data-[active=true]:bg-blue-950 data-[active=true]:text-white{% endif %}"
+        data-active="false">
+        {{ entry.category.name }} <span class="text-[10px] text-slate-400">({{ entry.products|length }})</span>
+      </button>
+      {% endfor %}
+    </div>
+
+    <!-- 3) Produtos da categoria -->
+    {% for entry in season.categories %}
+    <div class="cat-panel" data-cat-panel="{{ season.code }}-{{ entry.category.slug }}" hidden>
+      {% if entry.products %}
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        {% for product in entry.products %}{% include "website/partials/product_card.html" %}{% endfor %}
+      </div>
+      {% else %}
+      <p class="text-center text-slate-400 py-10">Nenhum produto nesta categoria ainda.</p>
+      {% endif %}
+    </div>
+    {% endfor %}
+    {% else %}
+    <p class="text-center text-slate-400 py-16"><i class="fa-solid fa-box-open text-3xl block mb-3"></i>Nenhum produto de {{ season.label|lower }} no momento.</p>
+    {% endif %}
+  </section>
+  {% endfor %}
+</div>
+
+<script>
+  function selectSeason(code) {
+    document.querySelectorAll('.season-tab').forEach(t => t.dataset.active = String(t.dataset.seasonTab === code));
+    document.querySelectorAll('.season-panel').forEach(p => p.hidden = p.dataset.seasonPanel !== code);
+    const panel = document.querySelector('[data-season-panel="' + code + '"]');
+    const current = panel && panel.querySelector('.cat-tab[data-active="true"]');
+    const first = panel && panel.querySelector('.cat-tab');
+    if (!current && first) selectCategory(code, first.dataset.catTab.slice(code.length + 1));
+    else updateUrl(code, current ? current.dataset.catTab.slice(code.length + 1) : '');
+  }
+  function selectCategory(code, slug) {
+    const key = code + '-' + slug;
+    const panel = document.querySelector('[data-season-panel="' + code + '"]');
+    if (!panel) return;
+    panel.querySelectorAll('.cat-tab').forEach(t => t.dataset.active = String(t.dataset.catTab === key));
+    panel.querySelectorAll('.cat-panel').forEach(p => p.hidden = p.dataset.catPanel !== key);
+    updateUrl(code, slug);
+  }
+  function updateUrl(code, slug) {
+    const q = new URLSearchParams({ linha: code });
+    if (slug) q.set('categoria', slug);
+    history.replaceState(null, '', '?' + q.toString());
+  }
+  document.addEventListener('DOMContentLoaded', () => {
+    const code = '{{ active_line|escapejs }}', slug = '{{ active_category|escapejs }}';
+    const panel = document.querySelector('[data-season-panel="' + code + '"]');
+    if (slug && panel && panel.querySelector('[data-cat-tab="' + code + '-' + slug + '"]')) {
+      selectCategory(code, slug);
+      document.querySelectorAll('.season-tab').forEach(t => t.dataset.active = String(t.dataset.seasonTab === code));
+    } else {
+      selectSeason(code);
+    }
+  });
+</script>
+{% endblock %}
