@@ -35,7 +35,7 @@
     <!-- CATEGORIAS EM DESTAQUE (Calor vs Frio) -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <!-- Card Calor / UV -->
-      <a href="{% url 'website:product_list' %}" class="block bg-slate-900/80 border border-slate-800 hover:border-red-500/50 rounded-2xl p-6 sm:p-8 transition-all duration-300 shadow-lg group">
+      <a href="{% url 'website:shop' %}?linha=verao" class="block bg-slate-900/80 border border-slate-800 hover:border-red-500/50 rounded-2xl p-6 sm:p-8 transition-all duration-300 shadow-lg group">
         <div class="w-12 h-12 bg-red-600/20 text-red-500 border border-red-500/30 rounded-xl flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
           <i class="fa-solid fa-sun"></i>
         </div>
@@ -49,7 +49,7 @@
       </a>
 
       <!-- Card Frio -->
-      <a href="{% url 'website:product_list' %}" class="block bg-slate-900/80 border border-slate-800 hover:border-blue-500/50 rounded-2xl p-6 sm:p-8 transition-all duration-300 shadow-lg group">
+      <a href="{% url 'website:shop' %}?linha=inverno" class="block bg-slate-900/80 border border-slate-800 hover:border-blue-500/50 rounded-2xl p-6 sm:p-8 transition-all duration-300 shadow-lg group">
         <div class="w-12 h-12 bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-xl flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
           <i class="fa-solid fa-snowflake"></i>
         </div>
