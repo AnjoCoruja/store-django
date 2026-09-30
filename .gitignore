@@ -7,6 +7,16 @@ venv/
 
 # Environment / secrets
 .env
+.env.*
+!.env.example
+# chaves do Google (conta de serviço / OAuth) — NUNCA versionar
+*.json
+!package.json
+!package-lock.json
+service-account*.json
+credentials*.json
+client_secret*.json
+token*.json
 
 # Django
 db.sqlite3
