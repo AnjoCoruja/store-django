@@ -16,6 +16,8 @@ Exemplos:
 - Tamanhos: "P ao GG", "04 ao 16", "P/M/G" ou um tamanho único.
 - Preços: aceita "59.90", "59,90" e "R$ 59,90".
 """
+from __future__ import annotations
+
 import re
 import unicodedata
 from dataclasses import dataclass
