@@ -122,9 +122,14 @@ LOGGING = {
 }
 
 # ===== Integrações (preencha no .env) =====
-# Google Drive: caminho do JSON da conta de serviço + ID da pasta raiz do catálogo.
-GOOGLE_SERVICE_ACCOUNT_FILE = os.environ.get("GOOGLE_SERVICE_ACCOUNT_FILE", "API AQUI")
-GOOGLE_DRIVE_ROOT_FOLDER_ID = os.environ.get("GOOGLE_DRIVE_ROOT_FOLDER_ID", "API AQUI")
+# Google Drive — pasta "REDBLUELINE" (INVERNO / VERÃO):
+# https://drive.google.com/drive/folders/17aVjdXzO65x1LbpCclqJTzhX9zRJnWb0
+GOOGLE_DRIVE_ROOT_FOLDER_ID = os.environ.get(
+    "GOOGLE_DRIVE_ROOT_FOLDER_ID", "17aVjdXzO65x1LbpCclqJTzhX9zRJnWb0"
+)
+# Credencial (opcional enquanto a pasta for pública). Use UMA das duas:
+GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "API AQUI")  # chave de API com Drive API ativada
+GOOGLE_SERVICE_ACCOUNT_FILE = os.environ.get("GOOGLE_SERVICE_ACCOUNT_FILE", "API AQUI")  # JSON da conta de serviço
 # Gemini (LangChain) para gerar descrições a partir das fotos.
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "API AQUI")
 GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.8-flash")
