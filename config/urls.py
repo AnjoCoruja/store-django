@@ -10,6 +10,7 @@ urlpatterns = [
         "robots.txt",
         TemplateView.as_view(template_name="robots.txt", content_type="text/plain"),
     ),
+    path("pedido/", include("apps.orders.urls", namespace="orders")),
     path("api/v1/", include("apps.api.urls", namespace="api")),
     path("api/v1/agent/", include("apps.api.agent.urls", namespace="agent")),
     path("", include("apps.website.urls")),
