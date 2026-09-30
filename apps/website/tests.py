@@ -114,3 +114,35 @@ class TestAddToCartButton:
         for url in ["/", "/produtos/", f"/categorias/{cat.slug}/", "/produtos/camisa/"]:
             content = client.get(url).content.decode()
             assert "'Camisa', 50.00, 'verao', 45.00, null)" in content, url
+
+
+@pytest.mark.django_db
+class TestShopTabs:
+    def test_shop_groups_by_season_and_category(self, client):
+        jf = CategoryFactory(name="Jaquetas Femininas", line="inverno")
+        uv = CategoryFactory(name="Camiseta UV", line="verao")
+        leg = CategoryFactory(name="Leggings")
+        Product.objects.create(name="Puffer", price="189.90", category=jf, line="inverno", is_published=True)
+        Product.objects.create(name="UV Manga Longa", price="59.90", category=uv, line="verao", is_published=True)
+        Product.objects.create(name="Legging Térmica", price="80.00", category=leg, line="inverno", is_published=True)
+        CategoryFactory(name="Vazia")
+        resp = client.get("/loja/")
+        assert resp.status_code == 200
+        seasons = {s["code"]: s for s in resp.context["seasons"]}
+        assert [c["category"].name for c in seasons["verao"]["categories"]] == ["Camiseta UV"]
+        assert [c["category"].name for c in seasons["inverno"]["categories"]] == ["Jaquetas Femininas", "Leggings"]
+        content = resp.content.decode()
+        assert 'data-cat-tab="inverno-jaquetas-femininas"' in content
+        assert 'data-cat-tab="verao-camiseta-uv"' in content
+        assert "addToCart(" in content
+
+    def test_shop_active_tab_from_query(self, client):
+        resp = client.get("/loja/?linha=inverno&categoria=jaquetas")
+        assert resp.context["active_line"] == "inverno"
+        assert resp.context["active_category"] == "jaquetas"
+        assert client.get("/loja/?linha=xx").context["active_line"] == "verao"
+
+    def test_base_has_checkout_and_csrf(self, client):
+        content = client.get("/").content.decode()
+        assert "/pedido/finalizar/" in content and 'name="csrf-token"' in content
+        assert "WHATSAPP_NUMERO = '5511954294886'" in content
