@@ -51,6 +51,21 @@ No carrinho, **Finalizar pelo WhatsApp** grava o pedido (preços conferidos no s
 planilha XLSX e abre o WhatsApp da loja com o resumo e o link da planilha. Os pedidos ficam no
 admin em **Pedidos**.
 
+## Atualizando o projeto (git pull)
+
+Se o `git pull` disser *"Your local changes ... would be overwritten"*:
+
+```bash
+git status                 # mostra quais arquivos você alterou
+git stash                  # guarda suas alterações de lado
+git pull                   # baixa a versão nova
+git stash pop              # devolve suas alterações (se ainda quiser)
+```
+
+Para descartar as alterações locais de código e ficar igual ao GitHub:
+`git fetch && git reset --hard origin/main`. Isso **não apaga** `.env`, `db.sqlite3` nem arquivos
+`*.json` de chaves, que ficam fora do Git (estão no `.gitignore`).
+
 ## Testes
 
 ```bash
