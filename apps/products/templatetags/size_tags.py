@@ -13,6 +13,9 @@ def expand_sizes(size_range):
         return []
     s = str(size_range).strip()
     start = end = s
+    if "," in s or "/" in s:
+        parts = [x.strip() for x in s.replace("/", ",").split(",") if x.strip()]
+        return list(dict.fromkeys(parts))
     for sep in (" ao ", " a ", "-", "–"):
         if sep in s:
             start, _, end = s.partition(sep)
