@@ -277,22 +277,31 @@ def test_build_llm_with_key():
 
 # ---------------- comando ----------------
 @pytest.mark.django_db
+@override_settings(GOOGLE_DRIVE_ROOT_FOLDER_ID="API AQUI")
 def test_command_requires_folder():
     with pytest.raises(CommandError, match="GOOGLE_DRIVE_ROOT_FOLDER_ID"):
         call_command("sync_drive")
 
 
+def test_default_folder_is_redblueline():
+    from django.conf import settings
+    assert settings.GOOGLE_DRIVE_ROOT_FOLDER_ID == "17aVjdXzO65x1LbpCclqJTzhX9zRJnWb0"
+
+
 @pytest.mark.django_db
-def test_command_requires_drive_credentials():
-    with pytest.raises(CommandError, match="GOOGLE_SERVICE_ACCOUNT_FILE"):
+def test_command_reports_drive_errors(monkeypatch):
+    def boom(*a, **kw):
+        raise DriveNotConfigured("sem acesso")
+    monkeypatch.setattr("apps.products.management.commands.sync_drive.run_drive_sync", boom)
+    with pytest.raises(CommandError, match="sem acesso"):
         call_command("sync_drive", "--folder", "abc", "--no-ai")
 
 
 @pytest.mark.django_db
 def test_command_runs_and_prints_report(monkeypatch):
-    monkeypatch.setattr(drive_sync, "DriveCatalogClient", lambda: FakeClient(sample_tree()))
+    monkeypatch.setattr(drive_sync, "get_catalog_client", lambda: FakeClient(sample_tree()))
     out = StringIO()
-    call_command("sync_drive", "--folder", "root", "--no-ai", stdout=out)
+    call_command("sync_drive", "--folder", "https://drive.google.com/drive/u/3/folders/root", "--no-ai", stdout=out)
     text = out.getvalue()
     assert "Produtos novos: 3" in text and "Ignorado:" in text
 
@@ -301,3 +310,136 @@ def test_command_runs_and_prints_report(monkeypatch):
     out = StringIO()
     call_command("sync_drive", "--folder", "root", "--no-ai", stdout=out)
     assert "Erro:" in out.getvalue()
+
+
+# ---------------- nomes reais da pasta REDBLUELINE (padrão com hífens) ----------------
+@pytest.mark.parametrize("filename,name,color,sizes,price", [
+    ("Jaqueta-bomber-faixa-refletiva-punho-na-manga-capuz-removivel-p-m-g-gg-preto-cinza.claro-cinza.escuro-165.00.jpg",
+     "Jaqueta bomber faixa refletiva punho na manga capuz removivel", "Preto, Cinza Claro, Cinza Escuro", "P, M, G, GG", "165.00"),
+    ("Corta-Vento-Feminino-Impermeável-Filtro-solar-UV-50-p-m-g-gg-azul-branco-off-75.00.jpg",
+     "Corta Vento Feminino Impermeável Filtro solar UV 50", "Azul, Branco, Off White", "P, M, G, GG", "75.00"),
+    ("camiseta-uv-infantil-azul-amarelo-verdelimao-azulroyal-roxo-amarelo-preto-branco-tamanho-04-ao-16-30.00.jpg",
+     "Camiseta uv infantil", "Azul, Amarelo, Verde Limão, Azul Royal, Roxo, Preto, Branco", "04 ao 16", "30.00"),
+    ("vestido-indiano-branco-azulmarinho-preto-p-ao-gg-85.00.jpg",
+     "Vestido indiano", "Branco, Azul Marinho, Preto", "P ao GG", "85.00"),
+    ("Conjunto-plush-infantil-forrado-capuz-removivel--6-8-10-12-14-16-marrom-bege-preto-marinho-180.00.jpg",
+     "Conjunto plush infantil forrado capuz removivel", "Marrom, Bege, Preto, Marinho", "6, 8, 10, 12, 14, 16", "180.00"),
+    ("jaqueta-bomber-plus-forrada-touca-removivel-G1-G2-G3-G4-preto-rosa-bege-branco-190.00.jpg",
+     "Jaqueta bomber plus forrada touca removivel", "Preto, Rosa, Bege, Branco", "G1, G2, G3, G4", "190.00"),
+    ("Jaqueta-gominho-forrado-p-m-g-gg-bege,preto,azul-rosa-135.00.jpg",
+     "Jaqueta gominho forrado", "Bege, Preto, Azul, Rosa", "P, M, G, GG", "135.00"),
+    ("Jaqueta-naylon-forrada-touca-removivel-p-m-g-gg-Somente-na-cor-Rosa-100.00.jpg",
+     "Jaqueta naylon forrada touca removivel", "Rosa", "P, M, G, GG", "100.00"),
+    ("Jaqueta-gominho-dupla-face-capuz-removivel-forrada-p-m-g-gg-preta-camufrada-185.00.jpg",
+     "Jaqueta gominho dupla face capuz removivel forrada", "Preto, Camuflada", "P, M, G, GG", "185.00"),
+    ("Jaqueta-bomber-rosa-forrada-capuz-removivel-impermeavel-punho-interno-p-m-g-gg-rosa-100.00.png",
+     "Jaqueta bomber rosa forrada capuz removivel impermeavel punho interno", "Rosa", "P, M, G, GG", "100.00"),
+    ("camiseta-uv-adulto-feminina-tamanho-azul-branco-p-ao-gg-30.00.jpg",
+     "Camiseta uv adulto feminina", "Azul, Branco", "P ao GG", "30.00"),
+])
+def test_parse_hyphen_filenames(filename, name, color, sizes, price):
+    p = parse_filename(filename)
+    assert (p.name, p.color, p.size_range, str(p.price)) == (name, color, sizes, price)
+
+
+def test_parse_hyphen_edge_cases():
+    p = parse_filename("bone-preto-azul-25.jpg")  # sem tamanhos
+    assert (p.name, p.color, p.size_range, str(p.price)) == ("Bone", "Preto, Azul", "", "25.00")
+    p = parse_filename("meia-kit-p-m-listrada-10.jpg")  # cor fora do dicionário
+    assert p.color == "Listrada" and p.size_range == "P, M"
+    assert not parse_filename("foto-sem-preco.jpg").is_valid
+    assert parse_filename("---.jpg").name == ""
+
+
+def test_sizes_list_to_buttons():
+    prod = Product(size_range="P, M, G, GG")
+    assert prod.available_sizes() == ["P", "M", "G", "GG"]
+    from apps.products.templatetags.size_tags import expand_sizes
+    assert expand_sizes("6, 8, 10") == ["6", "8", "10"]
+
+
+def test_extract_folder_id():
+    from apps.products.services.google_drive import extract_folder_id
+    url = "https://drive.google.com/drive/u/3/folders/17aVjdXzO65x1LbpCclqJTzhX9zRJnWb0"
+    assert extract_folder_id(url) == "17aVjdXzO65x1LbpCclqJTzhX9zRJnWb0"
+    assert extract_folder_id("https://drive.google.com/open?id=abc_123") == "abc_123"
+    assert extract_folder_id(" xyz ") == "xyz"
+
+
+# ---------------- leitura da pasta pública ----------------
+def _entry(i, title, folder=False):
+    href = f"https://drive.google.com/drive/folders/{i}" if folder else f"https://drive.google.com/file/d/{i}/view"
+    return (f'<div class="flip-entry" id="entry-{i}" tabindex="0"><div class="flip-entry-info">'
+            f'<a href="{href}" target="_blank"><div class="flip-entry-title">{title}</div></a></div></div>')
+
+
+PAGES = {
+    "root": _entry("inv", "INVERNO", True) + _entry("ver", "VER&Atilde;O", True),
+    "inv": _entry("jf", "Jaquetas Femininas ", True),
+    "jf": _entry("f1", "parka-l&atilde;-batida-p-m-g-gg-preto-bege-190.00.jpg") + _entry("t", "leia.txt"),
+    "ver": _entry("uv", "Camisas UV", True),
+    "uv": _entry("f2", "camiseta-uv-azul-p-ao-gg-30.00.png"),
+}
+
+
+def fake_fetch(url):
+    if "uc?export=download" in url:
+        return b"IMG-" + url.rsplit("=", 1)[1].encode()
+    return PAGES[url.rsplit("=", 1)[1]].encode()
+
+
+@pytest.mark.django_db
+def test_public_client_full_sync():
+    from apps.products.services.google_drive import PublicDriveClient
+    client = PublicDriveClient(fetch=fake_fetch)
+    tree = client.get_tree("root", "raiz")
+    assert [c.name for c in tree.children] == ["INVERNO", "VERÃO"]
+    assert tree.children[0].children[0].name == "Jaquetas Femininas"
+    assert [i.name for i in tree.children[0].children[0].images] == ["parka-lã-batida-p-m-g-gg-preto-bege-190.00.jpg"]
+    assert tree.children[1].children[0].images[0].mime_type == "image/png"
+    assert client.download_bytes("f1") == b"IMG-f1"
+
+    report = run_drive_sync("root", client=client, describer=FakeDescriber())
+    assert report.products_created == 2 and report.descriptions_generated == 2
+    parka = Product.objects.get(drive_file_id="f1")
+    assert parka.name == "Parka lã batida" and parka.line == "inverno"
+    assert parka.category.name == "Jaquetas Femininas"
+    assert Product.objects.get(drive_file_id="f2").line == "verao"
+
+
+def test_public_client_http_and_depth(monkeypatch):
+    from apps.products.services import google_drive as gd
+    calls = []
+
+    class Resp:
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+        def read(self): return PAGES["inv"].encode()
+
+    monkeypatch.setattr(gd.urllib.request, "urlopen", lambda req, timeout: calls.append(req.full_url) or Resp())
+    tree = gd.PublicDriveClient().get_tree("inv", "x", max_depth=0)
+    assert tree.children == [] and calls == ["https://drive.google.com/embeddedfolderview?id=inv"]
+
+
+def test_get_catalog_client_fallbacks(monkeypatch):
+    from apps.products.services import google_drive as gd
+    assert isinstance(gd.get_catalog_client(), gd.PublicDriveClient)
+    monkeypatch.setattr(gd, "build_drive_service", lambda: FakeService())
+    assert isinstance(gd.get_catalog_client(), gd.DriveCatalogClient)
+
+
+@override_settings(GOOGLE_API_KEY="chave")
+def test_build_drive_service_with_api_key(monkeypatch):
+    import googleapiclient.discovery as disc
+    monkeypatch.setattr(disc, "build", lambda *a, **kw: ("svc", kw.get("developerKey")))
+    assert google_drive.build_drive_service() == ("svc", "chave")
+
+
+@pytest.mark.django_db
+def test_duplicate_photo_names_skipped():
+    tree = DriveFolder(id="r", name="raiz", children=[DriveFolder(id="i", name="Inverno", children=[
+        DriveFolder(id="c", name="Moletons", images=[
+            img("a", "moletom-p-m-preto-150.jpg"), img("b", "moletom-p-m-preto-150.jpg")]),
+    ])])
+    report = run_drive_sync("r", client=FakeClient(tree), use_ai=False)
+    assert report.products_created == 1 and "repetida" in report.skipped[0]
