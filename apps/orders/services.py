@@ -1,5 +1,7 @@
 """Criação de pedidos e planilha (XLSX). Os preços são recalculados no servidor
 a partir do banco — o valor enviado pelo navegador nunca é usado."""
+from __future__ import annotations
+
 from decimal import Decimal
 from io import BytesIO
 
