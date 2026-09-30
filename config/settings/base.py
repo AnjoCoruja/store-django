@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     "apps.audit",
     "apps.website",
     "apps.api",
+    "apps.orders",
 ]
 
 MIDDLEWARE = [
@@ -57,6 +58,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "apps.website.context_processors.store",
             ],
         },
     },
@@ -118,3 +120,13 @@ LOGGING = {
         "apps": {"handlers": ["console"], "level": "INFO", "propagate": False},
     },
 }
+
+# ===== Integrações (preencha no .env) =====
+# Google Drive: caminho do JSON da conta de serviço + ID da pasta raiz do catálogo.
+GOOGLE_SERVICE_ACCOUNT_FILE = os.environ.get("GOOGLE_SERVICE_ACCOUNT_FILE", "API AQUI")
+GOOGLE_DRIVE_ROOT_FOLDER_ID = os.environ.get("GOOGLE_DRIVE_ROOT_FOLDER_ID", "API AQUI")
+# Gemini (LangChain) para gerar descrições a partir das fotos.
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "API AQUI")
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.8-flash")
+# WhatsApp da loja (somente números, com DDI e DDD).
+WHATSAPP_NUMBER = os.environ.get("WHATSAPP_NUMBER", "5511954294886")
