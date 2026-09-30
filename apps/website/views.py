@@ -1,4 +1,4 @@
-from django.db.models import Q
+from django.db.models import Prefetch, Q
 from django.shortcuts import get_object_or_404, render
 
 from apps.products.models import Category, Product
@@ -148,5 +148,42 @@ def category_detail(request, slug):
             "active_line": active_line,
             "meta_title": f"{category.name} — Loja",
             "meta_description": (category.description or category.name)[:155],
+        },
+    )
+
+
+def shop(request):
+    """Vitrine em abas: Estação (Verão/Inverno) -> Categoria -> Produtos."""
+    products_qs = Product.objects.filter(is_active=True, is_published=True).prefetch_related("images")
+    tops = list(
+        Category.objects.filter(is_active=True, parent__isnull=True)
+        .prefetch_related(Prefetch("subcategories", queryset=Category.objects.filter(is_active=True)))
+    )
+    all_products = list(products_qs.select_related("category"))
+    seasons = []
+    for code, label in LINES:
+        cats = []
+        for cat in tops:
+            ids = set(cat.descendant_ids())
+            prods = [p for p in all_products if p.category_id in ids and p.line == code]
+            if cat.line and cat.line != code:
+                continue
+            if not prods and cat.line != code:
+                continue
+            cats.append({"category": cat, "products": prods})
+        seasons.append({"code": code, "label": label, "categories": cats})
+    active = request.GET.get("linha")
+    if active not in {c for c, _ in LINES}:
+        active = next((s["code"] for s in seasons if s["categories"]), "verao")
+    active_cat = request.GET.get("categoria", "")
+    return render(
+        request,
+        "website/shop.html",
+        {
+            "seasons": seasons,
+            "active_line": active,
+            "active_category": active_cat,
+            "meta_title": "Loja | Red Blue Line — Verão & Inverno",
+            "meta_description": "Escolha a estação, a categoria e monte seu pedido. Finalize pelo WhatsApp.",
         },
     )
