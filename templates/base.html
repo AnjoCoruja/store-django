@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token }}">
   <title>{% block title %}{{ meta_title|default:"Red Blue Line" }}{% endblock %}</title>
   <meta name="description" content="{{ meta_description|default:'Moda para atacado e varejo no Brás — Red Blue Line.' }}">
   <link rel="canonical" href="{{ request.build_absolute_uri }}">
@@ -25,6 +26,7 @@
       <nav aria-label="Navegação principal" class="hidden sm:block">
         <ul class="flex space-x-6 text-sm font-semibold">
           <li><a href="{% url 'website:home' %}" class="text-gray-300 hover:text-white transition">Início</a></li>
+          <li><a href="{% url 'website:shop' %}" class="text-gray-300 hover:text-white transition">Loja</a></li>
           <li><a href="{% url 'website:product_list' %}" class="text-gray-300 hover:text-white transition">Produtos</a></li>
           <li><a href="{% url 'website:about' %}" class="text-gray-300 hover:text-white transition">Sobre Nós</a></li>
         </ul>
@@ -118,7 +120,10 @@
         <span>Total:</span>
         <span id="cart-total" class="text-emerald-400">R$ 0,00</span>
       </div>
-      <button onclick="finalizarWhatsApp()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition flex items-center justify-center gap-2">
+      <label for="cart-customer" class="sr-only">Seu nome</label>
+      <input id="cart-customer" type="text" maxlength="120" placeholder="Seu nome (opcional)"
+             class="w-full mb-3 bg-slate-800 border border-slate-700 text-sm text-white rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500">
+      <button id="btn-finalizar" onclick="finalizarWhatsApp()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition flex items-center justify-center gap-2">
         <i class="fa-brands fa-whatsapp text-xl"></i>
         <span>Finalizar pelo WhatsApp</span>
       </button>
@@ -127,7 +132,7 @@
 
   <script>
     // ===== Estado global do carrinho (persiste entre páginas) =====
-    const WHATSAPP_NUMERO = '5511954294886';
+    const WHATSAPP_NUMERO = '{{ WHATSAPP_NUMBER|default:"5511954294886"|escapejs }}';
     let cart = {};
     try { cart = JSON.parse(localStorage.getItem('rbl_cart') || '{}'); } catch (e) { cart = {}; }
 
@@ -275,22 +280,37 @@
       updateCartUI();
     }
 
-    function finalizarWhatsApp() {
+    // Finaliza: grava o pedido no servidor (preços conferidos no banco), gera a
+    // planilha XLSX e abre o WhatsApp da loja com o resumo + link da planilha.
+    async function finalizarWhatsApp() {
       const items = Object.values(cart);
-      if (items.length === 0) {
-        alert('Seu carrinho está vazio.');
-        return;
+      if (items.length === 0) { alert('Seu carrinho está vazio.'); return; }
+      const btn = document.getElementById('btn-finalizar');
+      if (btn) { btn.disabled = true; btn.classList.add('opacity-60'); }
+      // abre a aba já no clique para não ser bloqueada pelo navegador
+      const win = window.open('', '_blank');
+      try {
+        const resp = await fetch('{% url "orders:checkout" %}', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content,
+          },
+          body: JSON.stringify({
+            customer_name: (document.getElementById('cart-customer') || {}).value || '',
+            items: items.map(i => ({ id: i.id, qty: i.qty, size: i.size, color: i.color })),
+          }),
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.error || 'Erro ao finalizar.');
+        cart = {}; saveCart(); updateCartUI();
+        if (win) { win.location.href = data.whatsapp_url; } else { window.location.href = data.whatsapp_url; }
+      } catch (e) {
+        if (win) win.close();
+        alert(e.message || 'Não foi possível finalizar. Tente novamente.');
+      } finally {
+        if (btn) { btn.disabled = false; btn.classList.remove('opacity-60'); }
       }
-      let mensagem = 'Olá! Gostaria de fazer o seguinte pedido na Red Blue Line:\n\n';
-      let total = 0;
-      items.forEach(item => {
-        const up = unitPrice(item);
-        const subtotal = up * item.qty;
-        total += subtotal;
-        mensagem += `• ${item.qty}x ${item.name}${item.size ? ' [' + item.size + ']' : ''}${item.color ? ' [' + item.color + ']' : ''} — R$ ${up.toFixed(2)}${tierLabel()} (subtotal: R$ ${subtotal.toFixed(2)})\n`;
-      });
-      mensagem += `\n*TOTAL DO PEDIDO: R$ ${total.toFixed(2)}*`;
-      window.open(`https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(mensagem)}`, '_blank');
     }
 
     // Atualiza o badge ao carregar qualquer página
