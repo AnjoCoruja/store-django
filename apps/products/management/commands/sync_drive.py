@@ -9,7 +9,7 @@ class Command(BaseCommand):
     help = "Importa categorias e produtos a partir das pastas e fotos do Google Drive."
 
     def add_arguments(self, parser):
-        parser.add_argument("--folder", help="ID da pasta raiz (padrão: GOOGLE_DRIVE_ROOT_FOLDER_ID)")
+        parser.add_argument("--folder", help="ID ou link da pasta raiz (padrão: GOOGLE_DRIVE_ROOT_FOLDER_ID)")
         parser.add_argument("--no-ai", action="store_true", help="Não gerar descrições com Gemini")
         parser.add_argument("--regenerate", action="store_true", help="Regerar todas as descrições")
         parser.add_argument("--unpublish-missing", action="store_true",
