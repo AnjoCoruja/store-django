@@ -7,7 +7,7 @@ from django.db import transaction
 from apps.products.filename_parser import detect_season, parse_filename
 from apps.products.models import Category, Product
 
-from .google_drive import DriveCatalogClient, DriveFolder, public_image_url
+from .google_drive import DriveFolder, extract_folder_id, get_catalog_client, public_image_url
 
 logger = logging.getLogger("apps.products")
 
@@ -64,7 +64,13 @@ class DriveSync:
 
     # ---------- produtos ----------
     def _sync_images(self, folder: DriveFolder, category: Category, season: str):
+        seen_names = set()
         for image in folder.images:
+            key = image.name.strip().lower()
+            if key in seen_names:
+                self.report.skipped.append(f"{folder.name}/{image.name}: foto repetida (mesmo nome)")
+                continue
+            seen_names.add(key)
             parsed = parse_filename(image.name)
             if not parsed.is_valid:
                 self.report.skipped.append(
@@ -83,7 +89,7 @@ class DriveSync:
         created = product is None
         if created:
             product = Product(drive_file_id=image.id, is_published=True, is_active=True)
-        product.name = parsed.name
+        product.name = parsed.name[:200]
         product.category = category
         product.line = season
         product.color = parsed.color
@@ -124,7 +130,7 @@ class DriveSync:
     def _walk(self, folder: DriveFolder, parent: Category, season: str):
         self._sync_images(folder, parent, season)
         for child in folder.children:
-            sub = self._get_category(child.name, parent, season)
+            sub = self._get_category(child.name.strip(), parent, season)
             self._walk(child, sub, season)
 
     @transaction.atomic
@@ -142,7 +148,7 @@ class DriveSync:
                     "coloque dentro de uma pasta de categoria"
                 )
             for cat_folder in season_folder.children:
-                category = self._get_category(cat_folder.name, None, season)
+                category = self._get_category(cat_folder.name.strip(), None, season)
                 self._walk(cat_folder, category, season)
 
         if self.unpublish_missing:
@@ -167,7 +173,8 @@ def _fallback_description(parsed, season):
 
 def run_drive_sync(root_folder_id, use_ai=True, regenerate=False, unpublish_missing=False,
                    client=None, describer=None) -> SyncReport:
-    client = client or DriveCatalogClient()
+    client = client or get_catalog_client()
+    root_folder_id = extract_folder_id(root_folder_id)
     if use_ai and describer is None:
         from .ai_descriptions import GeminiNotConfigured, ProductDescriber
 
